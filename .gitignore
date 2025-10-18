@@ -5,7 +5,13 @@
 *.swp
 .DS_Store
 .atom/
+.android/
 .build/
+.design/
+.docs/
+.ios/
+.test/
+.web/
 .buildlog/
 .history
 .svn/
@@ -38,6 +44,10 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+AGENTS.md
+plan_breakdowbn.md
+plan.md
+plan.txt
 
 # Android Studio will place build artifacts here
 /android/app/debug
