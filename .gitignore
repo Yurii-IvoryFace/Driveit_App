@@ -50,10 +50,10 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
-AGENTS.md
-plan_breakdowbn.md
-plan.md
-plan.txt
+/AGENTS.md
+/plan_breakdown.md
+/plan.md
+/plan.txt
 
 # Android Studio will place build artifacts here
 /android/app/debug
