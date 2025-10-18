@@ -1,0 +1,18 @@
+  late final List<VehicleDocument> _initialDocuments;
+  final List<_PendingDocument> _pendingDocuments = [];
+      _initialDocuments = const [];
+    _initialDocuments = List<VehicleDocument>.from(vehicle.documents);
+                  _buildDocumentsSection(theme),
+  Widget _buildDocumentsSection(ThemeData theme) {
+          title: 'Documents',
+        if (_documents.isEmpty)
+            'No documents attached yet.',
+            children: _documents
+      builder: (context) => _DocumentSheet(uuid: _uuid),
+    setState(() => _documents.add(pending));
+      _documents.removeWhere((item) => item.document.id == id);
+      documents: _documents.map((item) => item.document).toList(),
+class _DocumentSheet extends StatefulWidget {
+  const _DocumentSheet({required this.uuid});
+  State<_DocumentSheet> createState() => _DocumentSheetState();
+class _DocumentSheetState extends State<_DocumentSheet> {
