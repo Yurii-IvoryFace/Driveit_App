@@ -4,7 +4,6 @@ import 'package:driveit_app/features/vehicles/presentation/vehicle_create_page.d
 import 'package:driveit_app/features/vehicles/presentation/vehicle_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
 class VehiclesListPage extends StatefulWidget {
   const VehiclesListPage({super.key});
@@ -14,15 +13,15 @@ class VehiclesListPage extends StatefulWidget {
 }
 
 class VehiclesListPageState extends State<VehiclesListPage> {
-  final _uuid = const Uuid();
-
   @override
   Widget build(BuildContext context) {
-    final repository = context.watch<VehicleRepository>();
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        StreamBuilder<List<Vehicle>>(
+  final repository = context.watch<VehicleRepository>();
+  
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Positioned.fill(
+        child: StreamBuilder<List<Vehicle>>(
           stream: repository.watchVehicles(),
           builder: (context, snapshot) {
             final vehicles = snapshot.data ?? const <Vehicle>[];
@@ -48,17 +47,15 @@ class VehiclesListPageState extends State<VehiclesListPage> {
             );
           },
         ),
-        Positioned(
-          right: 20,
-          bottom: 20,
-          child: FloatingActionButton(
-            onPressed: showAddVehicleDialog,
-            child: const Icon(Icons.add),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+      Positioned(
+        right: 20,
+        bottom: 90,
+        child: _AddVehicleButton(onPressed: showAddVehicleDialog),
+      ),
+    ],
+  );
+}
 
   Future<void> showAddVehicleDialog() async {
     final vehicle = await Navigator.of(context).push<Vehicle>(
@@ -73,110 +70,6 @@ class VehiclesListPageState extends State<VehiclesListPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${vehicle.displayName} added to your garage')),
     );
-  }
-
-  Future<Vehicle?> _showVehicleForm({Vehicle? initial}) async {
-    final displayNameController = TextEditingController(
-      text: initial?.displayName ?? '',
-    );
-    final makeController = TextEditingController(text: initial?.make ?? '');
-    final modelController = TextEditingController(text: initial?.model ?? '');
-    final yearController = TextEditingController(
-      text: initial != null ? initial.year.toString() : '',
-    );
-    final licenseController = TextEditingController(
-      text: initial?.licensePlate ?? '',
-    );
-
-    Vehicle? result;
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        final isEditing = initial != null;
-        return AlertDialog(
-          title: Text(isEditing ? 'Edit vehicle' : 'New vehicle'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: displayNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Display name',
-                    hintText: 'e.g. Family SUV',
-                  ),
-                ),
-                TextField(
-                  controller: makeController,
-                  decoration: const InputDecoration(labelText: 'Make'),
-                ),
-                TextField(
-                  controller: modelController,
-                  decoration: const InputDecoration(labelText: 'Model'),
-                ),
-                TextField(
-                  controller: yearController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Year'),
-                ),
-                TextField(
-                  controller: licenseController,
-                  decoration: const InputDecoration(
-                    labelText: 'License plate (optional)',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final year = int.tryParse(yearController.text);
-                if (displayNameController.text.isEmpty ||
-                    makeController.text.isEmpty ||
-                    modelController.text.isEmpty ||
-                    year == null) {
-                  return;
-                }
-
-                if (initial case Vehicle existing) {
-                  result = existing.copyWith(
-                    displayName: displayNameController.text,
-                    make: makeController.text,
-                    model: modelController.text,
-                    year: year,
-                    licensePlate: licenseController.text.isEmpty
-                        ? null
-                        : licenseController.text,
-                  );
-                } else {
-                  result = Vehicle(
-                    id: _uuid.v4(),
-                    displayName: displayNameController.text,
-                    make: makeController.text,
-                    model: modelController.text,
-                    year: year,
-                    licensePlate: licenseController.text.isEmpty
-                        ? null
-                        : licenseController.text,
-                  );
-                }
-
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result;
   }
 
   Future<void> _showVehicleActions(Vehicle vehicle) async {
@@ -264,7 +157,12 @@ class VehiclesListPageState extends State<VehiclesListPage> {
   }
 
   Future<void> _editVehicle(Vehicle vehicle) async {
-    final updated = await _showVehicleForm(initial: vehicle);
+    final updated = await Navigator.of(context).push<Vehicle>(
+      MaterialPageRoute(
+        builder: (_) => VehicleCreatePage(initialVehicle: vehicle),
+        fullscreenDialog: true,
+      ),
+    );
     if (updated == null || !mounted) return;
     await context.read<VehicleRepository>().saveVehicle(updated);
     _showSnackBar('Vehicle updated');
@@ -551,3 +449,27 @@ class _EmptyGarage extends StatelessWidget {
 }
 
 enum _VehicleAction { edit, photos, setPrimary, delete }
+
+class _AddVehicleButton extends StatelessWidget {
+  const _AddVehicleButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 42,
+      height: 42,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Icon(Icons.add, size: 22),
+      ),
+    );
+  }
+}

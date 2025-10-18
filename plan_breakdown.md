@@ -9,6 +9,10 @@
 ## Phase 1. Basic functionality (Vehicle management)
 
 - 1.1 CRUD for vehicles, selection of active vehicle, avatar, gallery.
+  - Reused unified vehicle create/edit form across list and details pages (Manage > Edit) to keep UX consistent.
+- 1.3 Home dashboard timeline hooked to vehicle quick actions with unified event storage (odometer, notes, refuel, service, etc.).
+  - Bottom sheet quick actions wired to the Home FAB and scoped to the active (primary) vehicle; new entries appear instantly in the timeline.
+  - Event timeline cards open a detail view with edit/delete actions and reuse the unified event form.
 - 1.2 Photo album (integration with camera, categories, full-screen, compression).
 
 ## Phase 2. Fuel tracking
@@ -79,9 +83,9 @@
 
 # Completed phases
 
-- **Phase 0** � project created, environment configured, basic architecture defined.
-- **Phase 1.1** � car management (CRUD, primary selection) and base UI implemented.
-- **Phase 1.2 (partial)** � photo album UI with category filters, full-screen viewer, and add/delete flows via URL entry.
+- **Phase 0**  project created, environment configured, basic architecture defined.
+- **Phase 1.1**  car management (CRUD, primary selection) and base UI implemented.
+- **Phase 1.2 (partial)**  photo album UI with category filters, full-screen viewer, and add/delete flows via URL entry.
 
 ---
 
@@ -103,7 +107,7 @@
 - Delivered document management UX (attach, list, remove) with repository support plus widget coverage to guard the new flows.
 - Rolled the refreshed glassmorphism-inspired aesthetic across the shell, home, quick actions, drawers, and placeholder screens.
 
-�
+
 
 2025-10-14 (UI polish, remove glassmorphism)
 - Removed frosted/blurred styling across the app; switched to flat surfaces and solid borders (see AppTheme changes).

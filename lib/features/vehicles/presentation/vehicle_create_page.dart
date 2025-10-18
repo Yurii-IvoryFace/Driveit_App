@@ -23,6 +23,7 @@ class VehicleCreatePage extends StatefulWidget {
 class _VehicleCreatePageState extends State<VehicleCreatePage> {
   final _formKey = GlobalKey<FormState>();
   final _uuid = const Uuid();
+  final ScrollController _scrollController = ScrollController();
 
   bool get _isEditing => widget.initialVehicle != null;
 
@@ -101,6 +102,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     _salePriceController.dispose();
     _saleOdometerController.dispose();
     _notesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -157,7 +159,9 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
         child: Form(
           key: _formKey,
           child: Scrollbar(
+            controller: _scrollController,
             child: SingleChildScrollView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

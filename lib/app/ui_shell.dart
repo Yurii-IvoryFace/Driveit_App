@@ -1,5 +1,4 @@
 import 'package:driveit_app/app/widgets/app_drawer.dart';
-import 'package:driveit_app/app/widgets/quick_add_menu.dart';
 import 'package:driveit_app/features/home/presentation/home_page.dart';
 import 'package:driveit_app/features/reports/presentation/reports_page.dart';
 import 'package:driveit_app/features/settings/presentation/settings_page.dart';
@@ -17,11 +16,11 @@ class UiShell extends StatefulWidget {
 
 class _UiShellState extends State<UiShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _homePageKey = GlobalKey<HomePageState>();
   final _vehicleListKey = GlobalKey<VehiclesListPageState>();
   final _reportsPageKey = GlobalKey<ReportsPageState>();
 
   int _currentIndex = 0;
-  bool _isQuickAddOpen = false;
 
   late final List<_NavigationItem> _items;
   late final List<Widget> _pages;
@@ -41,8 +40,10 @@ class _UiShellState extends State<UiShell> {
 
     _pages = [
       HomePage(
+        key: _homePageKey,
         onFuelSummary: (vehicle) =>
             _openReportsTab(ReportsTab.fuel, vehicleId: vehicle?.id),
+        onOpenGarage: () => _onDestinationSelected(1),
       ),
       VehiclesListPage(key: _vehicleListKey),
       ReportsPage(key: _reportsPageKey),
@@ -54,12 +55,14 @@ class _UiShellState extends State<UiShell> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentItem = _items[_currentIndex];
+    const fabOffset = 90.0;
     return Scaffold(
       key: _scaffoldKey,
       drawer: AppDrawer(onSelect: _handleDrawerSelection),
       extendBody: true,
       backgroundColor: theme.colorScheme.surface,
       body: Stack(
+        clipBehavior: Clip.none,
         children: [
           Column(
             children: [
@@ -87,15 +90,14 @@ class _UiShellState extends State<UiShell> {
               ),
             ],
           ),
-          QuickAddMenu(
-            visible: _currentIndex == 0 && _isQuickAddOpen,
-            onDismiss: () => setState(() => _isQuickAddOpen = false),
-            onAction: _handleQuickAddAction,
-          ),
+          if (_currentIndex == 0)
+            Positioned(
+              right: 20,
+              bottom: fabOffset,
+              child: _QuickAddFab(onPressed: _openHomeQuickAdd),
+            ),
         ],
       ),
-      floatingActionButton: _buildFabForCurrentTab(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _FrostedNavBar(
         currentIndex: _currentIndex,
         items: _items,
@@ -104,31 +106,15 @@ class _UiShellState extends State<UiShell> {
     );
   }
 
-  Widget? _buildFabForCurrentTab() {
-    if (_currentIndex == 0) {
-      return FloatingActionButton(
-        onPressed: _toggleQuickAdd,
-        child: AnimatedRotation(
-          duration: const Duration(milliseconds: 200),
-          turns: _isQuickAddOpen ? 0.125 : 0,
-          child: Icon(_isQuickAddOpen ? Icons.close : Icons.add),
-        ),
-      );
-    }
-    return null;
-  }
-
   void _onDestinationSelected(int index) {
     setState(() {
       _currentIndex = index;
-      _isQuickAddOpen = false;
     });
   }
 
   void _openReportsTab(ReportsTab tab, {String? vehicleId}) {
     setState(() {
       _currentIndex = 2;
-      _isQuickAddOpen = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (tab == ReportsTab.fuel) {
@@ -145,21 +131,15 @@ class _UiShellState extends State<UiShell> {
     }
   }
 
-  void _toggleQuickAdd() {
-    setState(() {
-      _isQuickAddOpen = !_isQuickAddOpen;
-    });
-  }
-
-  void _handleQuickAddAction(QuickAddAction action) {
-    setState(() => _isQuickAddOpen = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.fixed,
-        content: Text('${action.label} action tapped (todo)'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  Future<void> _openHomeQuickAdd() async {
+    final homeState = _homePageKey.currentState;
+    if (homeState == null) {
+      return;
+    }
+    final handled = await homeState.showQuickAddSheet();
+    if (!handled && mounted) {
+      _onDestinationSelected(1);
+    }
   }
 }
 
@@ -168,6 +148,33 @@ class _NavigationItem {
 
   final String label;
   final IconData icon;
+}
+
+class _QuickAddFab extends StatelessWidget {
+  const _QuickAddFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: 'home-quick-add',
+      child: SizedBox(
+        width: 42,
+        height: 42,
+        child: FilledButton(
+          onPressed: onPressed,
+          style: FilledButton.styleFrom(
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Icon(Icons.add, size: 22),
+        ),
+      ),
+    );
+  }
 }
 
 class _ShellHeader extends StatelessWidget {

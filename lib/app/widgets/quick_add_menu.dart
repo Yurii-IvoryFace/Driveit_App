@@ -1,3 +1,4 @@
+import 'package:driveit_app/features/events/domain/vehicle_event.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -18,31 +19,37 @@ class QuickAddMenu extends StatelessWidget {
       label: 'Odometer',
       icon: Icons.speed_outlined,
       color: Color(0xFFFDD835),
+      type: VehicleEventType.odometer,
     ),
     QuickAddAction(
       label: 'Note',
       icon: Icons.sticky_note_2_outlined,
       color: Color(0xFFFFEA00),
+      type: VehicleEventType.note,
     ),
     QuickAddAction(
       label: 'Income',
       icon: Icons.attach_money,
       color: Color(0xFF4CAF50),
+      type: VehicleEventType.income,
     ),
     QuickAddAction(
       label: 'Service',
       icon: Icons.build_outlined,
       color: Color(0xFF42A5F5),
+      type: VehicleEventType.service,
     ),
     QuickAddAction(
       label: 'Expense',
       icon: Icons.camera_alt_outlined,
       color: Color(0xFFEF5350),
+      type: VehicleEventType.expense,
     ),
     QuickAddAction(
       label: 'Refuel',
       icon: Icons.local_gas_station_outlined,
       color: Color(0xFFFFA726),
+      type: VehicleEventType.refuel,
     ),
   ];
 
@@ -142,9 +149,11 @@ class QuickAddAction {
     required this.label,
     required this.icon,
     required this.color,
+    required this.type,
   });
 
   final String label;
   final IconData icon;
   final Color color;
+  final VehicleEventType type;
 }
