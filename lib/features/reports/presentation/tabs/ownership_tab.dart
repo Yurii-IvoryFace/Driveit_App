@@ -3,6 +3,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -84,29 +85,20 @@ class _OwnershipDocumentSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (counts.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'No documents attached yet. Upload vehicle paperwork to keep everything at hand.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.folder_open_outlined,
+        title: 'No documents attached yet',
+        message:
+            'Upload vehicle paperwork to keep everything at hand and surface renewal reminders.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -122,34 +114,12 @@ class _OwnershipDocumentSummary extends StatelessWidget {
             runSpacing: 12,
             children: counts.entries
                 .map(
-                  (entry) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceSecondary,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          entry.key.label,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${entry.value}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  (entry) => SizedBox(
+                    width: 160,
+                    child: DriveStatTile(
+                      label: entry.key.label,
+                      value: '${entry.value}',
+                      icon: _documentIcon(entry.key),
                     ),
                   ),
                 )
@@ -170,29 +140,20 @@ class _OwnershipTaskList extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (tasks.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'No upcoming ownership tasks tracked for this vehicle.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.event_available_outlined,
+        title: 'No ownership reminders yet',
+        message:
+            'Track insurance, registration, and service milestones to stay ahead of renewals.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,31 +211,22 @@ class _OwnershipDocumentsList extends StatelessWidget {
     final items = documents.take(6).toList();
 
     if (items.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'When you upload insurance, registration, or maintenance files they will appear here.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.archive_outlined,
+        title: 'No documents to show',
+        message:
+            'When you upload insurance, registration, or maintenance files they will appear here.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

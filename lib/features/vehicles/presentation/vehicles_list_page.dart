@@ -2,6 +2,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_create_page.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_details_page.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,47 +16,47 @@ class VehiclesListPage extends StatefulWidget {
 class VehiclesListPageState extends State<VehiclesListPage> {
   @override
   Widget build(BuildContext context) {
-  final repository = context.watch<VehicleRepository>();
-  
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Positioned.fill(
-        child: StreamBuilder<List<Vehicle>>(
-          stream: repository.watchVehicles(),
-          builder: (context, snapshot) {
-            final vehicles = snapshot.data ?? const <Vehicle>[];
-            if (vehicles.isEmpty) {
-              return const _EmptyGarage();
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-              itemCount: vehicles.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final vehicle = vehicles[index];
-                return _VehicleTile(
-                  vehicle: vehicle,
-                  onManage: () => _showVehicleActions(vehicle),
-                  onSetPrimary: vehicle.isPrimary
-                      ? null
-                      : () => _setPrimaryVehicle(vehicle),
-                  onConfirmDismiss: () => _confirmDeleteVehicle(vehicle),
-                  onViewDetails: () => _openVehicleDetails(vehicle),
-                );
-              },
-            );
-          },
+    final repository = context.watch<VehicleRepository>();
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: StreamBuilder<List<Vehicle>>(
+            stream: repository.watchVehicles(),
+            builder: (context, snapshot) {
+              final vehicles = snapshot.data ?? const <Vehicle>[];
+              if (vehicles.isEmpty) {
+                return const _EmptyGarage();
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+                itemCount: vehicles.length,
+                separatorBuilder: (context, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final vehicle = vehicles[index];
+                  return _VehicleTile(
+                    vehicle: vehicle,
+                    onManage: () => _showVehicleActions(vehicle),
+                    onSetPrimary: vehicle.isPrimary
+                        ? null
+                        : () => _setPrimaryVehicle(vehicle),
+                    onConfirmDismiss: () => _confirmDeleteVehicle(vehicle),
+                    onViewDetails: () => _openVehicleDetails(vehicle),
+                  );
+                },
+              );
+            },
+          ),
         ),
-      ),
-      Positioned(
-        right: 20,
-        bottom: 90,
-        child: _AddVehicleButton(onPressed: showAddVehicleDialog),
-      ),
-    ],
-  );
-}
+        Positioned(
+          right: 20,
+          bottom: 90,
+          child: _AddVehicleButton(onPressed: showAddVehicleDialog),
+        ),
+      ],
+    );
+  }
 
   Future<void> showAddVehicleDialog() async {
     final vehicle = await Navigator.of(context).push<Vehicle>(
@@ -303,7 +304,7 @@ class _VehicleTile extends StatelessWidget {
                     ? Image.network(
                         image,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        errorBuilder: (context, error, stackTrace) => Container(
                           color: const Color(0xFF161B1F),
                           alignment: Alignment.center,
                           child: const Icon(Icons.directions_car, size: 48),
@@ -426,23 +427,13 @@ class _EmptyGarage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.directions_car_filled, size: 72, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            'Add your first vehicle to get started.',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
+    return const Center(
+      child: DriveEmptyState(
+        icon: Icons.directions_car_filled,
+        title: 'Add your first vehicle to get started.',
+        message:
             'The current stub stores everything in memory.\nWe will hook up your local server or SQLite backend later.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+        useCard: false,
       ),
     );
   }

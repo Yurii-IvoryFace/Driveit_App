@@ -3,6 +3,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_create_page.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -589,7 +590,8 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
                         child: Image.network(
                           photo.url,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
                             Icons.broken_image_outlined,
                             size: 64,
                             color: Colors.white54,
@@ -666,7 +668,8 @@ class _VehicleHeroSection extends StatelessWidget {
               Image.network(
                 image,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _PlaceholderImage(vehicle),
+                errorBuilder: (context, error, stackTrace) =>
+                    _PlaceholderImage(vehicle),
               )
             else
               _PlaceholderImage(vehicle),
@@ -719,65 +722,63 @@ class _VehicleInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return DriveCard(
       color: const Color(0xFF161B1F),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Vehicle Overview',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+      borderRadius: 20,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Vehicle Overview',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                IconButton(
-                  onPressed: onEdit,
-                  tooltip: 'Edit overview',
-                  icon: const Icon(Icons.edit_outlined, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: onEdit,
+                tooltip: 'Edit overview',
+                icon: const Icon(Icons.edit_outlined, color: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _VehicleHeadline(vehicle: vehicle),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              if (vehicle.vehicleType != null)
+                InfoChip(
+                  icon: Icons.category_outlined,
+                  label: vehicle.vehicleType!,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _VehicleHeadline(vehicle: vehicle),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                if (vehicle.vehicleType != null)
-                  _InfoChip(
-                    icon: Icons.category_outlined,
-                    label: vehicle.vehicleType!,
-                  ),
-                if (vehicle.fuelType != null)
-                  _InfoChip(
-                    icon: Icons.local_gas_station_outlined,
-                    label: vehicle.fuelType!,
-                  ),
-                if (vehicle.transmission != null)
-                  _InfoChip(
-                    icon: Icons.settings_suggest_outlined,
-                    label: vehicle.transmission!,
-                  ),
-                if (vehicle.licensePlate != null)
-                  _InfoChip(
-                    icon: Icons.confirmation_num_outlined,
-                    label: vehicle.licensePlate!,
-                  ),
-                if (vehicle.vin != null)
-                  _InfoChip(icon: Icons.qr_code_2, label: vehicle.vin!),
-              ],
-            ),
-          ],
-        ),
+              if (vehicle.fuelType != null)
+                InfoChip(
+                  icon: Icons.local_gas_station_outlined,
+                  label: vehicle.fuelType!,
+                ),
+              if (vehicle.transmission != null)
+                InfoChip(
+                  icon: Icons.settings_suggest_outlined,
+                  label: vehicle.transmission!,
+                ),
+              if (vehicle.licensePlate != null)
+                InfoChip(
+                  icon: Icons.confirmation_num_outlined,
+                  label: vehicle.licensePlate!,
+                ),
+              if (vehicle.vin != null)
+                InfoChip(icon: Icons.qr_code_2, label: vehicle.vin!),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -864,7 +865,7 @@ class _VehicleBrandBadge extends StatelessWidget {
           width: radius * 2,
           height: radius * 2,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Text(
+          errorBuilder: (context, error, stackTrace) => Text(
             _vehicleInitials(vehicle.make),
             style: theme.textTheme.titleMedium?.copyWith(
               color: Colors.white,
@@ -1051,18 +1052,13 @@ class _VehicleDocumentSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         if (documents.isEmpty)
-          Card(
-            color: const Color(0xFF161B1F),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'No documents yet. Attach insurance, registration or service files to keep everything in one place.',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
+          const DriveEmptyState(
+            icon: Icons.description_outlined,
+            title: 'No documents yet',
+            message:
+                'Attach insurance, registration or service files to keep everything in one place.',
+            alignment: CrossAxisAlignment.start,
+            textAlign: TextAlign.start,
           )
         else
           Column(
@@ -1103,11 +1099,11 @@ class _VehicleDocumentTile extends StatelessWidget {
     final uploadedOn = MaterialLocalizations.of(
       context,
     ).formatShortDate(document.uploadedAt);
-    return Card(
+    return DriveCard(
       color: const Color(0xFF161B1F),
-      surfaceTintColor: Colors.transparent,
+      borderRadius: 18,
+      padding: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ListTile(
         onTap: onOpen,
         leading: CircleAvatar(
@@ -1306,7 +1302,7 @@ class _AddPhotoSheetState extends State<_AddPhotoSheet> {
             child: Image.network(
               dataUrl,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const SizedBox(
+              errorBuilder: (context, error, stackTrace) => const SizedBox(
                 height: 240,
                 child: Center(
                   child: Icon(
@@ -1499,7 +1495,7 @@ class _AddPhotoSheetState extends State<_AddPhotoSheet> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _pendingPhotos.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (context, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final pending = _pendingPhotos[index];
                 return GestureDetector(
@@ -1513,7 +1509,7 @@ class _AddPhotoSheetState extends State<_AddPhotoSheet> {
                           width: 140,
                           height: 160,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (context, error, stackTrace) =>
                               const _PhotoPlaceholder(),
                         ),
                       ),
@@ -1797,7 +1793,8 @@ class _VehiclePhotoTile extends StatelessWidget {
               child: Image.network(
                 photo.url,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const _PhotoPlaceholder(),
+                errorBuilder: (context, error, stackTrace) =>
+                    const _PhotoPlaceholder(),
               ),
             ),
             Positioned(
@@ -1873,37 +1870,6 @@ class _VehiclePhotoTile extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: Colors.white70),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _EmptyGalleryCard extends StatelessWidget {
   const _EmptyGalleryCard({
     required this.displayName,
@@ -1915,40 +1881,38 @@ class _EmptyGalleryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return DriveCard(
       color: const Color(0xFF161B1F),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'No photos yet',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
+      borderRadius: 20,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'No photos yet',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Add your first photo of $displayName to build a history of the vehicle.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add your first photo of $displayName to build a history of the vehicle.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onAddPhoto,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.tealAccent,
+              side: const BorderSide(color: Colors.tealAccent),
             ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: onAddPhoto,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.tealAccent,
-                side: const BorderSide(color: Colors.tealAccent),
-              ),
-              icon: const Icon(Icons.add_a_photo_outlined),
-              label: const Text('Add photo'),
-            ),
-          ],
-        ),
+            icon: const Icon(Icons.add_a_photo_outlined),
+            label: const Text('Add photo'),
+          ),
+        ],
       ),
     );
   }

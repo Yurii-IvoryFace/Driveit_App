@@ -306,7 +306,8 @@ class _BrandPickerSheetState extends State<_BrandPickerSheet> {
                           bottom: 12,
                         ),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        separatorBuilder: (context, _) =>
+                            const SizedBox(height: 4),
                         itemBuilder: (context, index) {
                           final brand = filtered[index];
                           final isSelected =
@@ -391,7 +392,7 @@ class _BrandAvatar extends StatelessWidget {
           width: 36,
           height: 36,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) =>
+          errorBuilder: (context, error, stackTrace) =>
               Text(brand.initials, style: theme.textTheme.labelLarge),
         ),
       ),

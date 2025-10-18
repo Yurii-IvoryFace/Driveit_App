@@ -249,7 +249,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
                     Image.network(
                       _existingCoverUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
+                      errorBuilder: (context, error, stackTrace) => Center(
                         child: Icon(
                           Icons.broken_image_outlined,
                           size: 42,
@@ -853,7 +853,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
         width: 96,
         height: 96,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (context, error, stackTrace) => Container(
           width: 96,
           height: 96,
           color: Colors.black12,

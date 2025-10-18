@@ -5,6 +5,7 @@ import 'package:driveit_app/features/refueling/domain/refueling_summary.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -191,24 +192,13 @@ class RefuelingViewState extends State<RefuelingView> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.local_gas_station_outlined, size: 56),
-            const SizedBox(height: 16),
-            Text(
-              'Add your first vehicle',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
+        child: DriveEmptyState(
+          icon: Icons.local_gas_station_outlined,
+          title: 'Add your first vehicle',
+          message:
               'Once a vehicle is in the garage, you can start tracking fuel history and consumption insights here.',
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-          ],
+          primaryActionLabel: 'Add vehicle',
+          onPrimaryAction: () => Navigator.of(context).maybePop(),
         ),
       ),
     );
@@ -619,20 +609,13 @@ class _RefuelingBody extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                     sliver: SliverToBoxAdapter(
-                      child: Row(
-                        children: [
-                          Text(
-                            'Fill-up history',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: onAdd,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Log fill-up'),
-                          ),
-                        ],
+                      child: DriveSectionHeader(
+                        title: 'Fill-up history',
+                        trailing: TextButton.icon(
+                          onPressed: onAdd,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Log fill-up'),
+                        ),
                       ),
                     ),
                   ),
@@ -641,7 +624,8 @@ class _RefuelingBody extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
                       sliver: SliverList.separated(
                         itemCount: sortedEntries.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 14),
+                        separatorBuilder: (context, _) =>
+                            const SizedBox(height: 14),
                         itemBuilder: (context, index) {
                           final entry = sortedEntries[index];
                           return _RefuelingHistoryCard(
@@ -827,13 +811,10 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return DriveCard(
+      color: AppColors.surfaceSecondary,
+      borderRadius: 20,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -892,141 +873,131 @@ class _RefuelingHistoryCard extends StatelessWidget {
     final price = NumberFormat('0.00');
     final dateLabel = DateFormat('MMM d').format(entry.date);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onEdit,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 22,
+      padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
+      onTap: onEdit,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(
-                      child: Text(
-                        dateLabel,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    dateLabel,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              currency.format(entry.totalCost),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceSecondary,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: Text(
-                                entry.fuelType.label,
-                                style: theme.textTheme.labelMedium,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
                         Text(
-                          '${liters.format(entry.volumeLiters)} L • ${price.format(entry.effectivePricePerLiter)} /L • ${NumberFormat('0').format(entry.odometerKm)} km',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                          currency.format(entry.totalCost),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (entry.station != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            entry.station!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                        ],
-                        if (entry.notes != null) ...[
-                          const SizedBox(height: 6),
-                          Text(entry.notes!, style: theme.textTheme.bodySmall),
-                        ],
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            entry.fuelType.label,
+                            style: theme.textTheme.labelMedium,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  PopupMenuButton<_EntryAction>(
-                    onSelected: (action) {
-                      switch (action) {
-                        case _EntryAction.edit:
-                          onEdit();
-                          break;
-                        case _EntryAction.delete:
-                          onDelete();
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(
-                        value: _EntryAction.edit,
-                        child: Text('Edit'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${liters.format(entry.volumeLiters)} L \u2022 ${price.format(entry.effectivePricePerLiter)} /L \u2022 ${NumberFormat('0').format(entry.odometerKm)} km',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
                       ),
-                      PopupMenuItem(
-                        value: _EntryAction.delete,
-                        child: Text('Delete'),
+                    ),
+                    if (entry.station != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        entry.station!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
-                  ),
-                ],
+                    if (entry.notes != null) ...[
+                      const SizedBox(height: 6),
+                      Text(entry.notes!, style: theme.textTheme.bodySmall),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    entry.isFullFill
-                        ? Icons.check_circle_outline
-                        : Icons.radio_button_unchecked,
-                    size: 18,
-                    color: entry.isFullFill
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    entry.isFullFill ? 'Full tank' : 'Partial fill',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+              PopupMenuButton<_EntryAction>(
+                onSelected: (action) {
+                  switch (action) {
+                    case _EntryAction.edit:
+                      onEdit();
+                      break;
+                    case _EntryAction.delete:
+                      onDelete();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: _EntryAction.edit, child: Text('Edit')),
+                  PopupMenuItem(
+                    value: _EntryAction.delete,
+                    child: Text('Delete'),
                   ),
                 ],
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                entry.isFullFill
+                    ? Icons.check_circle_outline
+                    : Icons.radio_button_unchecked,
+                size: 18,
+                color: entry.isFullFill
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                entry.isFullFill ? 'Full tank' : 'Partial fill',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1037,43 +1008,16 @@ class _EmptyHistoryIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
+    return DriveEmptyState(
+      icon: Icons.local_gas_station_outlined,
+      title: 'No refueling entries yet',
+      message:
+          'Log your first fill-up to start tracking costs, consumption, and mileage insights for this vehicle.',
+      onPrimaryAction: () => Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 200),
       ),
-      child: Column(
-        children: [
-          const Icon(Icons.local_gas_station_outlined, size: 56),
-          const SizedBox(height: 16),
-          Text(
-            'No refueling entries yet',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Log your first fill-up to start tracking costs, consumption, and mileage insights for this vehicle.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: () => Scrollable.ensureVisible(
-              context,
-              duration: const Duration(milliseconds: 200),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Log fill-up'),
-          ),
-        ],
-      ),
+      primaryActionLabel: 'Log fill-up',
     );
   }
 }

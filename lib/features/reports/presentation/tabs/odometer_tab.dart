@@ -4,6 +4,7 @@ import 'package:driveit_app/features/reports/presentation/tabs/tab_components.da
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -185,33 +186,24 @@ class _OdometerTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     if (entries.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'Add a refueling to capture the first odometer snapshot.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.speed_outlined,
+        title: 'No odometer snapshots yet',
+        message:
+            'Add a refueling to capture the first odometer snapshot and unlock mileage insights.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
+    final theme = Theme.of(context);
     final number = NumberFormat.decimalPattern();
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -313,13 +305,10 @@ class _ServiceScheduleCard extends StatelessWidget {
       ),
     ];
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -4,6 +4,7 @@ import 'package:driveit_app/features/events/presentation/event_visuals.dart';
 import 'package:driveit_app/features/events/presentation/vehicle_event_form_page.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -121,12 +122,8 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.border),
-                  color: AppColors.surface,
-                ),
+              DriveCard(
+                borderRadius: 22,
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,31 +167,35 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
                 ),
               ),
               const SizedBox(height: 28),
-              _DetailSection(
-                title: 'Location',
+              DriveInfoRow(
+                icon: Icons.place_outlined,
+                label: 'Location',
                 value: _event.location?.trim().isNotEmpty == true
                     ? _event.location!.trim()
                     : 'Not specified',
-                leading: Icons.place_outlined,
+                margin: const EdgeInsets.only(bottom: 16),
               ),
               if (odometerText != null)
-                _DetailSection(
-                  title: 'Odometer',
+                DriveInfoRow(
+                  icon: Icons.speed_outlined,
+                  label: 'Odometer',
                   value: odometerText,
-                  leading: Icons.speed_outlined,
+                  margin: const EdgeInsets.only(bottom: 16),
                 ),
               if (_event.serviceType != null &&
                   _event.serviceType!.trim().isNotEmpty)
-                _DetailSection(
-                  title: 'Service type',
+                DriveInfoRow(
+                  icon: Icons.build_outlined,
+                  label: 'Service type',
                   value: _event.serviceType!,
-                  leading: Icons.build_outlined,
+                  margin: const EdgeInsets.only(bottom: 16),
                 ),
               if (amountText != null)
-                _DetailSection(
-                  title: 'Amount',
+                DriveInfoRow(
+                  icon: Icons.payments_outlined,
+                  label: 'Amount',
                   value: amountText,
-                  leading: Icons.payments_outlined,
+                  margin: const EdgeInsets.only(bottom: 16),
                 ),
               if (_event.notes?.trim().isNotEmpty == true) ...[
                 const SizedBox(height: 20),
@@ -219,9 +220,18 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
                 Wrap(
                   spacing: 12,
                   runSpacing: 12,
-                  children: _event.attachments.map((attachment) {
-                    return _AttachmentChip(attachment: attachment);
-                  }).toList(),
+                  children: _event.attachments
+                      .map(
+                        (attachment) => DriveAttachmentChip(
+                          icon:
+                              attachment.type ==
+                                  VehicleEventAttachmentType.photo
+                              ? Icons.photo_outlined
+                              : Icons.insert_drive_file_outlined,
+                          label: attachment.name,
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
             ],
@@ -255,88 +265,5 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
       decimalDigits: 2,
     );
     return formatter.format(amount);
-  }
-}
-
-class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.value,
-    required this.leading,
-  });
-
-  final String title;
-  final String value;
-  final IconData leading;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: AppColors.surfaceSecondary,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Icon(leading, color: AppColors.textSecondary, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(value, style: theme.textTheme.bodyLarge),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AttachmentChip extends StatelessWidget {
-  const _AttachmentChip({required this.attachment});
-
-  final VehicleEventAttachment attachment;
-
-  @override
-  Widget build(BuildContext context) {
-    final isPhoto = attachment.type == VehicleEventAttachmentType.photo;
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        color: AppColors.surfaceSecondary,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isPhoto ? Icons.photo_outlined : Icons.insert_drive_file_outlined,
-            size: 18,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 10),
-          Text(attachment.name, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
   }
 }

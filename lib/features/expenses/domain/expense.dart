@@ -60,12 +60,12 @@ class Expense extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        vehicleId,
-        amount,
-        category,
-        date,
-        description,
-        notes,
-      ];
+    id,
+    vehicleId,
+    amount,
+    category,
+    date,
+    description,
+    notes,
+  ];
 }

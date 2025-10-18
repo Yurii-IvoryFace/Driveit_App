@@ -95,6 +95,12 @@
 2. Extend **Phase 3/4** scope by wiring non-fuel expense sources into the reports cost analytics and expose navigation hooks for deeper drill-ins (vehicle details, expense editor).
 3. Add targeted widget tests for the new report tabs/shared components to grow automated coverage.
 4. Prepare real storage for cars (HTTP/SQLite) in accordance with **Phase 7** after completion of the basic modules.
+5. Extract remaining bespoke UI into shared components:
+   - Convert home vehicle stats strip and hero fallback states to use shared primitives (e.g., stat tiles, banners).
+   - Migrate refueling summary header/metrics to shared section + card widgets to remove residual custom BoxDecoration.
+   - Review fuel tab (if any) and global forms for lingering local headers/buttons; align them with DriveSectionHeader / DriveActionChip patterns.
+
+6. Harden component usage with targeted widget tests covering DriveHeroBanner, DriveTimelineCard, DriveActionChip, and DriveAttachmentChip.
 
 ---
 
@@ -145,3 +151,14 @@
 - Split the reports experience into dedicated tabs: fuel, costs, odometer, and ownership each live in their own module with shared tab components for metric cards, selectors, and placeholders.
 - Expanded the analytics surface: costs tab now aggregates spending metrics/monthly totals, odometer tab charts recent mileage snapshots and service cadence, ownership tab surfaces document counts and renewal reminders.
 - Cleaned up analyzer warnings and deprecated API usage (withValues, vehicle dialog refactors), keeping `flutter analyze` green after the restructuring.
+
+## Progress log (2025-10-18)
+
+- Introduced shared UI primitives (`DriveCard`, `DriveEmptyState`, `InfoChip`) under `lib/shared/widgets` to consolidate duplicated styling and enforce a component-first structure across features.
+- Refactored Vehicles, Refueling, Home, and Reports tabs (costs, odometer, ownership) to adopt the shared components, removing bespoke empty-state cards and ad-hoc containers while preserving behaviour.
+- Extended the component library with info rows and action tiles, migrating event details and settings screens away from hand-rolled containers.
+- Rolled shared cards/empty states through the refueling empty garage view and reports overview header/callout to eliminate remaining bespoke containers.
+- Added a reusable timeline card and migrated the home event feed to it, removing the last bespoke timeline container styling.
+- Introduced shared section headers and attachment chips, refactoring event forms/details to drop bespoke InputChip/label implementations.
+- Normalized formatting via `dart format` and refreshed decorative strings to use explicit escapes, preventing encoding regressions observed in earlier commits.
+- Added DriveHeroBanner/DriveActionChip and migrated home hero & quick add UI plus refueling history headers to shared components.

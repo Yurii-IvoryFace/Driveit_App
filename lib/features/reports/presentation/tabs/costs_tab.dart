@@ -9,6 +9,7 @@ import 'package:driveit_app/features/reports/presentation/tabs/tab_components.da
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -218,36 +219,27 @@ class _MonthlyBreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     if (data.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'Log a few fuel and ownership expenses to see month-over-month totals.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.stacked_bar_chart_outlined,
+        title: 'No monthly trends yet',
+        message:
+            'Log a few fuel and ownership expenses to see month-over-month totals.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
+    final theme = Theme.of(context);
     final formatter = NumberFormat.simpleCurrency();
     final monthFormatter = DateFormat('MMM yyyy');
     final baseMax = data.map((item) => item.combined).reduce(math.max);
     final maxTotal = baseMax <= 0 ? 0.01 : baseMax;
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -283,7 +275,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Fuel: ${formatter.format(item.totalFuel)} • Other: ${formatter.format(item.totalNonFuel)}',
+                    'Fuel: ${formatter.format(item.totalFuel)} \u2022 Other: ${formatter.format(item.totalNonFuel)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -365,35 +357,25 @@ class _FuelHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     if (entries.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'No fuel purchases recorded yet. Add a refueling to build your expense history.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.local_gas_station_outlined,
+        title: 'No fuel purchases recorded yet',
+        message: 'Add a refueling to build your expense history.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
+    final theme = Theme.of(context);
     final currency = NumberFormat.simpleCurrency();
     final liters = NumberFormat('0.0');
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -458,34 +440,24 @@ class _ExpenseHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     if (expenses.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          'No ownership expenses logged yet. Add maintenance, insurance, or other costs to see them here.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
+      return const DriveEmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'No ownership expenses logged yet',
+        message: 'Add maintenance, insurance, or other costs to see them here.',
+        alignment: CrossAxisAlignment.start,
+        textAlign: TextAlign.start,
       );
     }
 
+    final theme = Theme.of(context);
     final currency = NumberFormat.simpleCurrency();
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 24,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

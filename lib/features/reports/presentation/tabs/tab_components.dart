@@ -1,5 +1,6 @@
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 class ReportMetric {
@@ -54,13 +55,10 @@ class ReportMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return DriveCard(
+      color: AppColors.surface,
+      borderRadius: 20,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -119,13 +117,10 @@ class VehicleSelectorRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Container(
+          child: DriveCard(
+            color: AppColors.surface,
+            borderRadius: 16,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selected.id,
@@ -170,13 +165,10 @@ class ReportsPlaceholder extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
-          child: Container(
+          child: DriveCard(
+            color: AppColors.surface,
+            borderRadius: 28,
             padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.border),
-              color: AppColors.surface,
-            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

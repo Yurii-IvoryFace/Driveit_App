@@ -9,6 +9,7 @@ import 'package:driveit_app/features/events/presentation/vehicle_event_form_page
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -290,7 +291,7 @@ class HomePageState extends State<HomePage> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
             sliver: SliverList.separated(
               itemCount: events.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              separatorBuilder: (context, _) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final event = events[index];
                 return _EventCard(
@@ -318,83 +319,26 @@ class _VehicleHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final image = vehicle?.photoUrl;
     final currentVehicle = vehicle;
     final subtitle = currentVehicle == null
         ? 'Add your first vehicle to unlock stats & tracking'
         : '${currentVehicle.make} ${currentVehicle.model} \u2022 ${currentVehicle.year}';
 
-    return Stack(
-      children: [
-        Container(
-          height: 220,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.border),
-            image: image != null
-                ? DecorationImage(
-                    image: NetworkImage(image),
-                    fit: BoxFit.cover,
-                    onError: (_, __) {},
-                  )
-                : null,
-            color: AppColors.surfaceSecondary,
-          ),
-        ),
-        Container(
-          height: 220,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black87],
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  vehicle?.displayName ?? 'No vehicles yet',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    FilledButton.icon(
-                      onPressed: onOpenGarage,
-                      icon: const Icon(Icons.directions_car_outlined),
-                      label: Text(
-                        vehicle == null ? 'Add vehicle' : 'Open garage',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: vehicle == null ? null : onFuelStatsTap,
-                      child: const Text('Fuel summary'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    return DriveHeroBanner(
+      image: image != null ? NetworkImage(image) : null,
+      fallbackIcon: Icons.directions_car_outlined,
+      title: vehicle?.displayName ?? 'No vehicles yet',
+      subtitle: subtitle,
+      primaryAction: FilledButton.icon(
+        onPressed: onOpenGarage,
+        icon: const Icon(Icons.directions_car_outlined),
+        label: Text(vehicle == null ? 'Add vehicle' : 'Open garage'),
+      ),
+      secondaryAction: OutlinedButton(
+        onPressed: vehicle == null ? null : onFuelStatsTap,
+        child: const Text('Fuel summary'),
+      ),
     );
   }
 }
@@ -456,7 +400,7 @@ class _VehicleStatsStrip extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.only(right: 20),
         itemBuilder: (context, index) => _HomeStatCard(stat: stats[index]),
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        separatorBuilder: (context, _) => const SizedBox(width: 16),
         itemCount: stats.length,
       ),
     );
@@ -475,7 +419,6 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final visuals = resolveEventVisual(event.type);
     final dateText = DateFormat('MMM d, yyyy').format(event.occurredAt);
     final odometer = event.odometerKm == null
@@ -498,106 +441,19 @@ class _EventCard extends StatelessWidget {
       );
     }
 
-    return InkWell(
+    return DriveTimelineCard(
+      icon: visuals.icon,
+      iconColor: visuals.color,
+      iconBackgroundColor: visuals.color.withValues(alpha: 0.18),
+      title: event.title,
+      dateLabel: dateText,
+      location: event.location?.trim().isNotEmpty == true
+          ? event.location!.trim()
+          : 'Location not specified',
+      metaChips: chips,
+      notes: event.notes,
+      hasAttachments: event.hasAttachments,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.border),
-          color: AppColors.surface,
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: visuals.color.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(visuals.icon, color: visuals.color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        dateText,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.place_outlined,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event.location?.trim().isNotEmpty == true
-                              ? event.location!.trim()
-                              : 'Location not specified',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (event.hasAttachments)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Icon(
-                            Icons.attach_file,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (chips.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Wrap(spacing: 12, runSpacing: 6, children: chips),
-                  ],
-                  if (event.notes?.trim().isNotEmpty == true) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      event.notes!.trim(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -621,26 +477,13 @@ class _EventMetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InfoChip(
+      icon: icon,
+      label: label,
+      iconColor: AppColors.textSecondary,
+      textColor: AppColors.textSecondary,
+      backgroundColor: AppColors.surfaceSecondary,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -656,7 +499,6 @@ class _TimelineEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final title = hasVehicle
         ? 'No activity logged yet'
         : 'Add a vehicle to get started';
@@ -666,37 +508,14 @@ class _TimelineEmptyState extends StatelessWidget {
         : 'Once you add a vehicle, you’ll be able to track every refuel, '
               'expense, or note in a single timeline.';
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-        color: AppColors.surfaceSecondary,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onOpenGarage,
-            child: Text(hasVehicle ? 'Open garage' : 'Add vehicle'),
-          ),
-        ],
-      ),
+    return DriveEmptyState(
+      icon: hasVehicle ? Icons.timeline : Icons.directions_car_outlined,
+      title: title,
+      message: subtitle,
+      alignment: CrossAxisAlignment.start,
+      textAlign: TextAlign.start,
+      primaryActionLabel: hasVehicle ? 'Open garage' : 'Add vehicle',
+      onPrimaryAction: onOpenGarage,
     );
   }
 }
@@ -724,12 +543,9 @@ class _HomeStatCard extends StatelessWidget {
     return SizedBox(
       width: 180,
       height: 132,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.border),
-          color: AppColors.surface,
-        ),
+      child: DriveCard(
+        color: AppColors.surface,
+        borderRadius: 22,
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,40 +585,13 @@ class _QuickAddSheetButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
-          color: AppColors.surfaceSecondary,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: action.color.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(action.icon, color: action.color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                action.label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
+    return SizedBox(
+      width: 160,
+      child: DriveActionChip(
+        icon: action.icon,
+        label: action.label,
+        color: action.color,
+        onTap: onTap,
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_details_page.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -107,11 +108,12 @@ class ReportsPageState extends State<ReportsPage>
                   ),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceSecondary,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                DriveCard(
+                  color: AppColors.surfaceSecondary,
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
                   child: TabBar(
                     isScrollable: true,
@@ -266,13 +268,9 @@ class _OverviewHeader extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Container(
+              child: DriveCard(
+                borderRadius: 16,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selected.id,
@@ -372,13 +370,10 @@ class _OverviewCallout extends StatelessWidget {
         : 'Log a refueling to unlock consumption and cost analytics for this vehicle.';
     final actionLabel = hasData ? 'Open fuel history' : 'Add refueling';
 
-    return Container(
+    return DriveCard(
+      color: AppColors.surfaceSecondary,
+      borderRadius: 20,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSecondary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

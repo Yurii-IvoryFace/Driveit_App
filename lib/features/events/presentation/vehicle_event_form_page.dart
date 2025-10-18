@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:driveit_app/features/events/domain/vehicle_event.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
-import 'package:driveit_app/shared/theme/app_theme.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -281,7 +281,7 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SectionLabel(title: 'Vehicle'),
+                const DriveSectionHeader(title: 'Vehicle'),
                 const SizedBox(height: 8),
                 TextFormField(
                   enabled: false,
@@ -289,7 +289,7 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                   decoration: const InputDecoration(labelText: 'Vehicle'),
                 ),
                 const SizedBox(height: 24),
-                _SectionLabel(title: 'Details'),
+                const DriveSectionHeader(title: 'Details'),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleController,
@@ -391,7 +391,7 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                _SectionLabel(title: 'Attachments'),
+                const DriveSectionHeader(title: 'Attachments'),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -415,13 +415,11 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                     runSpacing: 8,
                     children: _attachments
                         .map(
-                          (item) => InputChip(
-                            label: Text(item.name),
-                            avatar: Icon(
-                              item.type == VehicleEventAttachmentType.photo
-                                  ? Icons.photo_outlined
-                                  : Icons.insert_drive_file_outlined,
-                            ),
+                          (item) => DriveAttachmentChip(
+                            icon: item.type == VehicleEventAttachmentType.photo
+                                ? Icons.photo_outlined
+                                : Icons.insert_drive_file_outlined,
+                            label: item.name,
                             onDeleted: () => _removeAttachment(item.id),
                           ),
                         )
@@ -429,7 +427,7 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                _SectionLabel(title: 'Notes'),
+                const DriveSectionHeader(title: 'Notes'),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesController,
@@ -483,22 +481,5 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
       'heic' => 'image/heic',
       _ => 'application/octet-stream',
     };
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
-      ),
-    );
   }
 }
