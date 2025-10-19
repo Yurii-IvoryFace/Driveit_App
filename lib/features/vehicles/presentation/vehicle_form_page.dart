@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_brand.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/presentation/widgets/brand_selector_field.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:driveit_app/shared/data/fuel_types.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -80,6 +79,18 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     _saleOdometerController = TextEditingController();
     _notesController = TextEditingController();
 
+    if (_isEditing) {
+      for (final controller in [
+        _nameController,
+        _modelController,
+        _yearController,
+        _licenseController,
+        _odometerController,
+      ]) {
+        controller.addListener(_handleSummaryChanged);
+      }
+    }
+
     final initial = widget.initialVehicle;
     if (initial != null) {
       _hydrateFromInitial(initial);
@@ -149,11 +160,39 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     );
   }
 
+  void _handleSummaryChanged() {
+    if (!_isEditing) return;
+    setState(() {});
+  }
+
+  Vehicle _buildSummaryVehicle(Vehicle base) {
+    final name = _nameController.text.trim();
+    final model = _modelController.text.trim();
+    final license = _licenseController.text.trim();
+    final odometerText = _odometerController.text.trim();
+    final yearText = _yearController.text.trim();
+
+    final odometer = int.tryParse(odometerText);
+    final year = int.tryParse(yearText);
+
+    return base.copyWith(
+      displayName: name.isEmpty ? null : name,
+      make: _selectedBrand?.name ?? base.make,
+      model: model.isEmpty ? null : model,
+      year: year ?? base.year,
+      licensePlate: license.isEmpty ? null : license,
+      odometerKm: odometer ?? base.odometerKm,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final titleText = _isEditing ? 'Edit vehicle' : 'Add vehicle';
     final actionText = _isEditing ? 'Save changes' : 'Create vehicle';
+    final summaryVehicle = _isEditing && widget.initialVehicle != null
+        ? _buildSummaryVehicle(widget.initialVehicle!)
+        : null;
 
     return Scaffold(
       appBar: AppBar(title: Text(titleText)),
@@ -169,6 +208,18 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildCoverSection(theme),
+                  if (summaryVehicle != null) ...[
+                    const SizedBox(height: 32),
+                    const DriveSectionHeader(
+                      title: 'Vehicle overview',
+                      subtitle: 'Current details for quick reference.',
+                    ),
+                    const SizedBox(height: 12),
+                    DriveVehicleSummary(
+                      vehicle: summaryVehicle,
+                      showHeader: false,
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   _buildGeneralSection(theme),
                   const SizedBox(height: 32),
@@ -732,12 +783,9 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
           subtitle: 'Anything special about the vehicle worth remembering.',
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        DriveNotesField(
           controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Notes',
-            alignLabelWithHint: true,
-          ),
+          label: 'Notes',
           minLines: 4,
           maxLines: 8,
         ),
@@ -1036,6 +1084,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
       if (_saleDate!.isBefore(_purchaseDate!)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.fixed,
             content: Text('Sale date cannot be before purchase date'),
           ),
         );
@@ -1397,12 +1446,9 @@ class _DocumentSheetState extends State<_DocumentSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
+          DriveNotesField(
             controller: _notesController,
-            decoration: const InputDecoration(
-              labelText: 'Notes (optional)',
-              alignLabelWithHint: true,
-            ),
+            label: 'Notes (optional)',
             minLines: 2,
             maxLines: 4,
           ),
