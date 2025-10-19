@@ -4,6 +4,7 @@ export 'drive_action_chip.dart';
 export 'drive_card.dart';
 export 'empty_state.dart';
 export 'hero_banner.dart';
+export 'media_tile.dart';
 export 'info_chip.dart';
 export 'info_row.dart';
 export 'section_header.dart';

@@ -1,6 +1,6 @@
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
-import 'package:driveit_app/features/vehicles/presentation/vehicle_create_page.dart';
+import 'package:driveit_app/features/vehicles/presentation/vehicle_form_page.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_details_page.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +61,7 @@ class VehiclesListPageState extends State<VehiclesListPage> {
   Future<void> showAddVehicleDialog() async {
     final vehicle = await Navigator.of(context).push<Vehicle>(
       MaterialPageRoute(
-        builder: (_) => const VehicleCreatePage(),
+        builder: (_) => const VehicleFormPage(),
         fullscreenDialog: true,
       ),
     );
@@ -160,7 +160,7 @@ class VehiclesListPageState extends State<VehiclesListPage> {
   Future<void> _editVehicle(Vehicle vehicle) async {
     final updated = await Navigator.of(context).push<Vehicle>(
       MaterialPageRoute(
-        builder: (_) => VehicleCreatePage(initialVehicle: vehicle),
+        builder: (_) => VehicleFormPage(initialVehicle: vehicle),
         fullscreenDialog: true,
       ),
     );

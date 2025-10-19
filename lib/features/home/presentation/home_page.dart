@@ -257,13 +257,8 @@ class HomePageState extends State<HomePage> {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-              'Vehicle timeline',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
+          sliver: const SliverToBoxAdapter(
+            child: DriveSectionHeader(title: 'Vehicle timeline'),
           ),
         ),
         if (vehicle == null)
@@ -399,7 +394,15 @@ class _VehicleStatsStrip extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.only(right: 20),
-        itemBuilder: (context, index) => _HomeStatCard(stat: stats[index]),
+        itemBuilder: (context, index) => SizedBox(
+          width: 180,
+          child: DriveStatTile(
+            icon: stats[index].icon,
+            label: stats[index].label,
+            value: stats[index].value,
+            backgroundColor: AppColors.surface,
+          ),
+        ),
         separatorBuilder: (context, _) => const SizedBox(width: 16),
         itemCount: stats.length,
       ),
@@ -530,51 +533,6 @@ class _VehicleStat {
   final IconData icon;
   final String label;
   final String value;
-}
-
-class _HomeStatCard extends StatelessWidget {
-  const _HomeStatCard({required this.stat});
-
-  final _VehicleStat stat;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: 180,
-      height: 132,
-      child: DriveCard(
-        color: AppColors.surface,
-        borderRadius: 22,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(stat.icon, color: AppColors.primary),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stat.label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  stat.value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _QuickAddSheetButton extends StatelessWidget {

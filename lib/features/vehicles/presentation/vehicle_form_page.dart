@@ -7,20 +7,21 @@ import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/presentation/widgets/brand_selector_field.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-class VehicleCreatePage extends StatefulWidget {
-  const VehicleCreatePage({super.key, this.initialVehicle});
+class VehicleFormPage extends StatefulWidget {
+  const VehicleFormPage({super.key, this.initialVehicle});
 
   final Vehicle? initialVehicle;
 
   @override
-  State<VehicleCreatePage> createState() => _VehicleCreatePageState();
+  State<VehicleFormPage> createState() => _VehicleFormPageState();
 }
 
-class _VehicleCreatePageState extends State<VehicleCreatePage> {
+class _VehicleFormPageState extends State<VehicleFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _uuid = const Uuid();
   final ScrollController _scrollController = ScrollController();
@@ -224,7 +225,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Cover photo',
           subtitle: 'Pick a hero image for your vehicle overview.',
         ),
@@ -340,7 +341,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Vehicle details',
           subtitle: 'Basics we use to reference the vehicle across the app.',
         ),
@@ -461,7 +462,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Fuel & capacity',
           subtitle: 'Track how you refuel and calculate refueling costs later.',
         ),
@@ -590,7 +591,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Ownership',
           subtitle: 'Keep purchase and sale history in one place.',
         ),
@@ -733,7 +734,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Notes',
           subtitle: 'Anything special about the vehicle worth remembering.',
         ),
@@ -755,7 +756,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Documents',
           subtitle: 'Attach insurance, registration and other paperwork.',
         ),
@@ -816,7 +817,7 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        const DriveSectionHeader(
           title: 'Album photos',
           subtitle: 'Populate the gallery with shots you already have.',
         ),
@@ -1213,34 +1214,6 @@ class _VehicleCreatePageState extends State<VehicleCreatePage> {
     if (lower.endsWith('.heic')) return 'image/heic';
     if (lower.endsWith('.webp')) return 'image/webp';
     return 'image/jpeg';
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-        ),
-      ],
-    );
   }
 }
 

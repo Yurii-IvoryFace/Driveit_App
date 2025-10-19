@@ -2,7 +2,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
-import 'package:driveit_app/features/vehicles/presentation/vehicle_create_page.dart';
+import 'package:driveit_app/features/vehicles/presentation/vehicle_form_page.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -132,7 +132,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     final repository = context.read<VehicleRepository>();
     final updated = await Navigator.of(context).push<Vehicle>(
       MaterialPageRoute(
-        builder: (_) => VehicleCreatePage(initialVehicle: vehicle),
+        builder: (_) => VehicleFormPage(initialVehicle: vehicle),
         fullscreenDialog: true,
       ),
     );
@@ -592,10 +592,10 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
                               const Icon(
-                            Icons.broken_image_outlined,
-                            size: 64,
-                            color: Colors.white54,
-                          ),
+                                Icons.broken_image_outlined,
+                                size: 64,
+                                color: Colors.white54,
+                              ),
                         ),
                       ),
                     ),
@@ -1034,21 +1034,13 @@ class _VehicleDocumentSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Documents',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const Spacer(),
-            FilledButton.icon(
-              onPressed: onAddDocument,
-              icon: const Icon(Icons.attach_file),
-              label: const Text('Add document'),
-            ),
-          ],
+        DriveSectionHeader(
+          title: 'Documents',
+          trailing: FilledButton.icon(
+            onPressed: onAddDocument,
+            icon: const Icon(Icons.attach_file),
+            label: const Text('Add document'),
+          ),
         ),
         const SizedBox(height: 12),
         if (documents.isEmpty)
@@ -1759,8 +1751,6 @@ class _VehiclePhotoSection extends StatelessWidget {
   }
 }
 
-enum _PhotoMenuAction { setCover, delete }
-
 class _VehiclePhotoTile extends StatelessWidget {
   const _VehiclePhotoTile({
     required this.photo,
@@ -1776,94 +1766,42 @@ class _VehiclePhotoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final addedOn = MaterialLocalizations.of(
       context,
     ).formatShortDate(photo.addedAt);
 
-    return GestureDetector(
+    return DriveMediaTile(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Hero(
-              tag: 'vehicle-photo-${photo.id}',
-              child: Image.network(
-                photo.url,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const _PhotoPlaceholder(),
-              ),
-            ),
-            Positioned(
-              left: 12,
-              top: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  photo.category.label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 8,
-              top: 4,
-              child: PopupMenuButton<_PhotoMenuAction>(
-                icon: const Icon(Icons.more_vert, color: Colors.white70),
-                color: const Color(0xFF1F2428),
-                onSelected: (value) {
-                  if (value == _PhotoMenuAction.setCover) {
-                    onSetCover();
-                  } else if (value == _PhotoMenuAction.delete) {
-                    onDelete();
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: _PhotoMenuAction.setCover,
-                    child: Text('Set as main photo'),
-                  ),
-                  PopupMenuItem(
-                    value: _PhotoMenuAction.delete,
-                    child: Text('Delete'),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              left: 12,
-              bottom: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  addedOn,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      topLabel: photo.category.label,
+      topTrailing: PopupMenuButton<_PhotoMenuAction>(
+        icon: const Icon(Icons.more_vert, color: Colors.white70),
+        color: const Color(0xFF1F2428),
+        onSelected: (value) {
+          switch (value) {
+            case _PhotoMenuAction.setCover:
+              onSetCover();
+              break;
+            case _PhotoMenuAction.delete:
+              onDelete();
+              break;
+          }
+        },
+        itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: _PhotoMenuAction.setCover,
+            child: Text('Set as main photo'),
+          ),
+          PopupMenuItem(value: _PhotoMenuAction.delete, child: Text('Delete')),
+        ],
+      ),
+      bottomLabel: addedOn,
+      child: Hero(
+        tag: 'vehicle-photo-${photo.id}',
+        child: Image.network(
+          photo.url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              const _PhotoPlaceholder(),
         ),
       ),
     );
@@ -1961,3 +1899,6 @@ class _PlaceholderImage extends StatelessWidget {
     );
   }
 }
+
+
+enum _PhotoMenuAction { setCover, delete }

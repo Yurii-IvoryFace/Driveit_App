@@ -318,50 +318,46 @@ class RefuelingViewState extends State<RefuelingView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            existing == null
-                                ? 'Add refueling'
-                                : 'Edit refueling',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextButton.icon(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: date.value,
-                            firstDate: DateTime.now().subtract(
-                              const Duration(days: 730),
-                            ),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 1),
-                            ),
-                          );
-                          if (picked != null) {
-                            date.value = picked;
-                            setModalState(() {});
-                          }
-                        },
-                        icon: const Icon(Icons.event_outlined),
-                        label: ValueListenableBuilder<DateTime>(
-                          valueListenable: date,
-                          builder: (context, value, _) {
-                            return Text(
-                              DateFormat('MMM d, yyyy').format(value),
-                            );
-                          },
+                      DriveSectionHeader(
+                        title: existing == null
+                            ? 'Add refueling'
+                            : 'Edit refueling',
+                        trailing: IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      ValueListenableBuilder<DateTime>(
+                        valueListenable: date,
+                        builder: (context, value, _) {
+                          return DriveActionChip(
+                            icon: Icons.event_outlined,
+                            label: DateFormat('MMM d, yyyy').format(value),
+                            color: AppColors.accent,
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: value,
+                                firstDate: DateTime.now().subtract(
+                                  const Duration(days: 730),
+                                ),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 1),
+                                ),
+                              );
+                              if (picked != null) {
+                                date.value = picked;
+                                setModalState(() {});
+                              }
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const DriveSectionHeader(title: 'Readings'),
+                      const SizedBox(height: 20),
+                      const DriveSectionHeader(title: 'Fuel & cost'),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -445,6 +441,8 @@ class RefuelingViewState extends State<RefuelingView> {
                           suffixText: '/L',
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      const DriveSectionHeader(title: 'Additional details'),
                       const SizedBox(height: 12),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
@@ -603,7 +601,14 @@ class _RefuelingBody extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     sliver: SliverToBoxAdapter(
-                      child: _SummaryMetrics(summary: summary),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const DriveSectionHeader(title: 'Refueling summary'),
+                          const SizedBox(height: 12),
+                          _SummaryMetrics(summary: summary),
+                        ],
+                      ),
                     ),
                   ),
                   SliverPadding(

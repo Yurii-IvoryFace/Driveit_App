@@ -95,10 +95,9 @@
 2. Extend **Phase 3/4** scope by wiring non-fuel expense sources into the reports cost analytics and expose navigation hooks for deeper drill-ins (vehicle details, expense editor).
 3. Add targeted widget tests for the new report tabs/shared components to grow automated coverage.
 4. Prepare real storage for cars (HTTP/SQLite) in accordance with **Phase 7** after completion of the basic modules.
-5. Extract remaining bespoke UI into shared components:
-   - Convert home vehicle stats strip and hero fallback states to use shared primitives (e.g., stat tiles, banners).
-   - Migrate refueling summary header/metrics to shared section + card widgets to remove residual custom BoxDecoration.
-   - Review fuel tab (if any) and global forms for lingering local headers/buttons; align them with DriveSectionHeader / DriveActionChip patterns.
+5. Continue auditing modules for bespoke UI:
+   - Review reports fuel tab and refueling modal for any remaining custom headers/cards, migrating them onto shared section and stat tiles as needed.
+   - Sweep vehicle detail/create flows for leftover local components (e.g., button bars, galleries) that could rely on shared widgets.
 
 6. Harden component usage with targeted widget tests covering DriveHeroBanner, DriveTimelineCard, DriveActionChip, and DriveAttachmentChip.
 
@@ -162,3 +161,9 @@
 - Introduced shared section headers and attachment chips, refactoring event forms/details to drop bespoke InputChip/label implementations.
 - Normalized formatting via `dart format` and refreshed decorative strings to use explicit escapes, preventing encoding regressions observed in earlier commits.
 - Added DriveHeroBanner/DriveActionChip and migrated home hero & quick add UI plus refueling history headers to shared components.
+- Standardized home stats/timeline headers and refueling summary with shared section + stat tiles.
+- Renamed vehicle form module, replaced hard-coded section headers with DriveSectionHeader across vehicle forms/details.
+- Refactored vehicle photo gallery to reuse DriveMediaTile and shared section headers.
+- Added widget coverage for shared widgets (hero banner, action chip, media tile, section header).
+- Harmonized refueling add/edit modal with shared section headers and DriveActionChip date picker.
+- Updated vehicle event form to reuse shared action chips and section headers.

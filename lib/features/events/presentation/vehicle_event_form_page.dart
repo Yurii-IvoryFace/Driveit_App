@@ -306,13 +306,10 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _dateController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Date',
-                    suffixIcon: Icon(Icons.calendar_today_outlined),
-                  ),
+                DriveActionChip(
+                  icon: Icons.calendar_today_outlined,
+                  label: _formatDate(_selectedDate),
+                  color: Theme.of(context).colorScheme.secondary,
                   onTap: _selectDate,
                 ),
                 const SizedBox(height: 16),
@@ -393,18 +390,21 @@ class _VehicleEventFormPageState extends State<VehicleEventFormPage> {
                 const SizedBox(height: 24),
                 const DriveSectionHeader(title: 'Attachments'),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: _addPhoto,
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: const Text('Add photo'),
+                    DriveActionChip(
+                      icon: Icons.photo_camera_outlined,
+                      label: 'Add photo',
+                      color: Theme.of(context).colorScheme.primary,
+                      onTap: _addPhoto,
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: _addDocument,
-                      icon: const Icon(Icons.attach_file),
-                      label: const Text('Add file'),
+                    DriveActionChip(
+                      icon: Icons.attach_file,
+                      label: 'Add file',
+                      color: Theme.of(context).colorScheme.secondary,
+                      onTap: _addDocument,
                     ),
                   ],
                 ),
