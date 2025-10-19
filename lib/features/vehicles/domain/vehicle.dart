@@ -1,5 +1,6 @@
 import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat.dart';
 import 'package:equatable/equatable.dart';
 
 const Object _unset = Object();
@@ -40,6 +41,7 @@ class Vehicle extends Equatable {
     this.notes,
     this.documents = const [],
     this.photos = const [],
+    this.stats = const [],
   });
 
   /// Unique identifier generated locally; replace with server ID later.
@@ -76,6 +78,7 @@ class Vehicle extends Equatable {
   final int? saleOdometerKm;
   final String? notes;
   final List<VehicleDocument> documents;
+  final List<VehicleStat> stats;
 
   Vehicle copyWith({
     String? id,
@@ -89,6 +92,7 @@ class Vehicle extends Equatable {
     bool? isPrimary,
     List<VehicleDocument>? documents,
     List<VehiclePhoto>? photos,
+    List<VehicleStat>? stats,
     String? brandSlug,
     Object? brandLogoUrl = _unset,
     Object? brandLogoThumbUrl = _unset,
@@ -124,6 +128,7 @@ class Vehicle extends Equatable {
       isPrimary: isPrimary ?? this.isPrimary,
       documents: documents ?? this.documents,
       photos: photos ?? this.photos,
+      stats: stats ?? this.stats,
       brandSlug: brandSlug ?? this.brandSlug,
       brandLogoUrl: brandLogoUrl == _unset
           ? this.brandLogoUrl
@@ -167,6 +172,7 @@ class Vehicle extends Equatable {
     isPrimary,
     documents,
     photos,
+    stats,
     brandSlug,
     brandLogoUrl,
     brandLogoThumbUrl,

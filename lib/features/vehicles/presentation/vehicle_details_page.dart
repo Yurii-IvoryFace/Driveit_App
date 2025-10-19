@@ -2,7 +2,10 @@ import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_document.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat_repository.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_form_page.dart';
+import 'package:driveit_app/features/vehicles/presentation/widgets/vehicle_stats_section.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -52,7 +55,19 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                  child: _VehicleStatRow(vehicle: current),
+                  child: StreamBuilder<List<VehicleStat>>(
+                    stream: context.read<VehicleStatRepository>().watchStats(current.id),
+                    builder: (context, statsSnapshot) {
+                      final stats = statsSnapshot.data ?? [];
+                      return VehicleStatsSection(
+                        vehicle: current,
+                        stats: stats,
+                        onStatAdded: (stat) => _handleStatAdded(current, stat),
+                        onStatUpdated: (stat) => _handleStatUpdated(current, stat),
+                        onStatDeleted: (stat) => _handleStatDeleted(current, stat),
+                      );
+                    },
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -130,6 +145,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
 
   Future<void> _showEditOverviewSheet(Vehicle vehicle) async {
     final repository = context.read<VehicleRepository>();
+    final statRepository = context.read<VehicleStatRepository>();
     final updated = await Navigator.of(context).push<Vehicle>(
       MaterialPageRoute(
         builder: (_) => VehicleFormPage(initialVehicle: vehicle),
@@ -138,6 +154,12 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     );
     if (updated == null) return;
     await repository.saveVehicle(updated);
+    
+    // Update odometer stat if odometer reading has changed
+    if (updated.odometerKm != null) {
+      await statRepository.ensureOdometerStat(updated.id, updated.odometerKm!);
+    }
+    
     if (!mounted) return;
     _showFloatingMessage('Vehicle overview updated');
   }
@@ -628,6 +650,27 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     _showFloatingMessage('Main photo updated');
   }
 
+  Future<void> _handleStatAdded(Vehicle vehicle, VehicleStat stat) async {
+    final repository = context.read<VehicleStatRepository>();
+    await repository.saveStat(stat);
+    if (!mounted) return;
+    _showFloatingMessage('Statistic added');
+  }
+
+  Future<void> _handleStatUpdated(Vehicle vehicle, VehicleStat stat) async {
+    final repository = context.read<VehicleStatRepository>();
+    await repository.saveStat(stat);
+    if (!mounted) return;
+    _showFloatingMessage('Statistic updated');
+  }
+
+  Future<void> _handleStatDeleted(Vehicle vehicle, VehicleStat stat) async {
+    final repository = context.read<VehicleStatRepository>();
+    await repository.deleteStat(stat.id);
+    if (!mounted) return;
+    _showFloatingMessage('Statistic deleted');
+  }
+
   void _showFloatingMessage(String message) {
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -894,127 +937,6 @@ String _vehicleInitials(String value) {
   return letters.trim().isEmpty ? '?' : letters.toUpperCase();
 }
 
-class _VehicleStatRow extends StatelessWidget {
-  const _VehicleStatRow({required this.vehicle});
-
-  final Vehicle vehicle;
-
-  @override
-  Widget build(BuildContext context) {
-    final stats = <_VehicleStat>[];
-    if (vehicle.odometerKm != null) {
-      stats.add(
-        _VehicleStat(
-          icon: Icons.speed_outlined,
-          label: 'Odometer',
-          value: '${vehicle.odometerKm} km',
-        ),
-      );
-    }
-    if (vehicle.nextService != null) {
-      stats.add(
-        _VehicleStat(
-          icon: Icons.build_circle_outlined,
-          label: 'Next service',
-          value: _formatDate(context, vehicle.nextService),
-        ),
-      );
-    }
-    if (vehicle.insuranceExpiry != null) {
-      stats.add(
-        _VehicleStat(
-          icon: Icons.shield_outlined,
-          label: 'Insurance',
-          value: _formatDate(context, vehicle.insuranceExpiry),
-        ),
-      );
-    }
-    if (vehicle.registrationExpiry != null) {
-      stats.add(
-        _VehicleStat(
-          icon: Icons.assignment_turned_in_outlined,
-          label: 'Registration',
-          value: _formatDate(context, vehicle.registrationExpiry),
-        ),
-      );
-    }
-
-    if (stats.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: stats
-            .map(
-              (stat) => Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _VehicleStatCard(stat: stat),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
-  String _formatDate(BuildContext context, DateTime? date) {
-    if (date == null) return '—';
-    return MaterialLocalizations.of(context).formatShortDate(date);
-  }
-}
-
-class _VehicleStat {
-  const _VehicleStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-}
-
-class _VehicleStatCard extends StatelessWidget {
-  const _VehicleStatCard({required this.stat});
-
-  final _VehicleStat stat;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: 170,
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B1F),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(18),
-      constraints: const BoxConstraints(minHeight: 120),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(stat.icon, color: Colors.tealAccent),
-          const SizedBox(height: 12),
-          Text(
-            stat.label,
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            stat.value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _VehicleDocumentSection extends StatelessWidget {
   const _VehicleDocumentSection({

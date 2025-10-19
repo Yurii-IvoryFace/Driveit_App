@@ -109,7 +109,7 @@ class DriveVehicleSummary extends StatelessWidget {
       parts.add(model);
     }
     if (parts.isEmpty) return null;
-    return parts.join(' • ');
+    return parts.join(' â€¢ ');
   }
 
   List<Widget> _buildInfoChips() {

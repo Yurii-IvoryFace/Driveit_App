@@ -8,6 +8,12 @@ import 'package:driveit_app/features/events/presentation/vehicle_event_details_p
 import 'package:driveit_app/features/events/presentation/vehicle_event_form_page.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat_repository.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat_type.dart';
+import 'package:driveit_app/features/vehicles/presentation/vehicle_form_page.dart';
+import 'package:driveit_app/features/vehicles/presentation/vehicle_stat_form_page.dart';
+import 'package:driveit_app/features/vehicles/presentation/widgets/interactive_stat_card.dart';
 import 'package:driveit_app/shared/theme/app_theme.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -110,7 +116,7 @@ class HomePageState extends State<HomePage> {
     final action = await showModalBottomSheet<QuickAddAction>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF161B1F),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -138,13 +144,14 @@ class HomePageState extends State<HomePage> {
                   'Quick actions',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Log refuels, notes, services, and more for the active vehicle.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Colors.white70,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -237,66 +244,69 @@ class HomePageState extends State<HomePage> {
     final vehicle = _activeVehicle;
     final events = _events;
 
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          sliver: SliverToBoxAdapter(
-            child: _VehicleHeroCard(
-              vehicle: vehicle,
-              onFuelStatsTap: () => widget.onFuelSummary(vehicle),
-              onOpenGarage: widget.onOpenGarage,
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          sliver: SliverToBoxAdapter(
-            child: _VehicleStatsStrip(vehicle: vehicle),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
-          sliver: const SliverToBoxAdapter(
-            child: DriveSectionHeader(title: 'Vehicle timeline'),
-          ),
-        ),
-        if (vehicle == null)
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F1418),
+      body: CustomScrollView(
+        slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             sliver: SliverToBoxAdapter(
-              child: _TimelineEmptyState(
-                hasVehicle: false,
+              child: _VehicleHeroCard(
+                vehicle: vehicle,
+                onFuelStatsTap: () => widget.onFuelSummary(vehicle),
                 onOpenGarage: widget.onOpenGarage,
               ),
             ),
-          )
-        else if (events.isEmpty)
+          ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             sliver: SliverToBoxAdapter(
-              child: _TimelineEmptyState(
-                hasVehicle: true,
-                onOpenGarage: widget.onOpenGarage,
-              ),
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-            sliver: SliverList.separated(
-              itemCount: events.length,
-              separatorBuilder: (context, _) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return _EventCard(
-                  event: event,
-                  onTap: () => _openEventDetails(event),
-                );
-              },
+              child: _VehicleStatsStrip(vehicle: vehicle),
             ),
           ),
-      ],
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+            sliver: const SliverToBoxAdapter(
+              child: DriveSectionHeader(title: 'Vehicle timeline'),
+            ),
+          ),
+          if (vehicle == null)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              sliver: SliverToBoxAdapter(
+                child: _TimelineEmptyState(
+                  hasVehicle: false,
+                  onOpenGarage: widget.onOpenGarage,
+                ),
+              ),
+            )
+          else if (events.isEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              sliver: SliverToBoxAdapter(
+                child: _TimelineEmptyState(
+                  hasVehicle: true,
+                  onOpenGarage: widget.onOpenGarage,
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              sliver: SliverList.separated(
+                itemCount: events.length,
+                separatorBuilder: (context, _) => const SizedBox(height: 14),
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  return _EventCard(
+                    event: event,
+                    onTap: () => _openEventDetails(event),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -345,72 +355,167 @@ class _VehicleStatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = <_VehicleStat>[
-      if (vehicle?.odometerKm != null)
-        _VehicleStat(
-          icon: Icons.speed_outlined,
-          label: 'Odometer',
-          value:
-              '${NumberFormat.decimalPattern().format(vehicle!.odometerKm!)} km',
-        ),
-      if (vehicle?.nextService != null)
-        _VehicleStat(
-          icon: Icons.build_circle_outlined,
-          label: 'Next service',
-          value: _formatDate(context, vehicle!.nextService!),
-        ),
-      if (vehicle?.insuranceExpiry != null)
-        _VehicleStat(
-          icon: Icons.shield_outlined,
-          label: 'Insurance',
-          value: _formatDate(context, vehicle!.insuranceExpiry!),
-        ),
-      if (vehicle?.registrationExpiry != null)
-        _VehicleStat(
-          icon: Icons.assignment_turned_in_outlined,
-          label: 'Registration',
-          value: _formatDate(context, vehicle!.registrationExpiry!),
-        ),
-    ];
-
-    if (stats.isEmpty) {
+    if (vehicle == null) {
       return SizedBox(
         height: 110,
         child: Center(
           child: Text(
-            vehicle == null
-                ? 'Service reminders will appear here once you add a vehicle.'
-                : 'Service reminders will appear here once available.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            'Service reminders will appear here once you add a vehicle.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       );
     }
 
-    return SizedBox(
-      height: 140,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(right: 20),
-        itemBuilder: (context, index) => SizedBox(
-          width: 180,
-          child: DriveStatTile(
-            icon: stats[index].icon,
-            label: stats[index].label,
-            value: stats[index].value,
-            backgroundColor: AppColors.surface,
-          ),
-        ),
-        separatorBuilder: (context, _) => const SizedBox(width: 16),
-        itemCount: stats.length,
-      ),
+    return StreamBuilder<List<VehicleStat>>(
+      stream: context.read<VehicleStatRepository>().watchStats(vehicle!.id),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? [];
+        
+        if (stats.isEmpty) {
+          return SizedBox(
+            height: 110,
+            child: Center(
+              child: Text(
+                'Service reminders will appear here once available.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Statistics',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                FilledButton.icon(
+                  onPressed: () => _showAddStatSheet(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add stat'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 160,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 20),
+                itemBuilder: (context, index) {
+                  final stat = stats[index];
+                  return InteractiveStatCard(
+                    stat: stat,
+                    onTap: () => _openStatDetails(context, stat),
+                    onEdit: () => _editStat(context, stat),
+                    onDelete: () => _confirmDeleteStat(context, stat),
+                  );
+                },
+                separatorBuilder: (context, _) => const SizedBox(width: 12),
+                itemCount: stats.length,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  String _formatDate(BuildContext context, DateTime date) {
-    return MaterialLocalizations.of(context).formatShortMonthDay(date);
+  Future<void> _openStatDetails(BuildContext context, VehicleStat stat) async {
+    // For odometer stats, open vehicle edit form instead
+    if (stat.type == VehicleStatType.odometer) {
+      await _editVehicleOdometer(context);
+    } else {
+      // For other stats, open the edit form
+      await _editStat(context, stat);
+    }
+  }
+
+  Future<void> _editStat(BuildContext context, VehicleStat stat) async {
+    final result = await Navigator.of(context).push<VehicleStat>(
+      MaterialPageRoute(
+        builder: (_) => VehicleStatFormPage(
+          vehicle: vehicle!,
+          initialStat: stat,
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+    
+    if (result != null && context.mounted) {
+      // The stat will be automatically updated via the stream
+    }
+  }
+
+  Future<void> _confirmDeleteStat(BuildContext context, VehicleStat stat) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete statistic'),
+        content: Text(
+          'Are you sure you want to delete this ${stat.type.label.toLowerCase()} entry?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<VehicleStatRepository>().deleteStat(stat.id);
+    }
+  }
+
+  Future<void> _showAddStatSheet(BuildContext context) async {
+    final result = await Navigator.of(context).push<VehicleStat>(
+      MaterialPageRoute(
+        builder: (_) => VehicleStatFormPage(vehicle: vehicle!),
+        fullscreenDialog: true,
+      ),
+    );
+    
+    if (result != null && context.mounted) {
+      // The stat will be automatically added via the stream
+    }
+  }
+
+  Future<void> _editVehicleOdometer(BuildContext context) async {
+    final result = await Navigator.of(context).push<Vehicle>(
+      MaterialPageRoute(
+        builder: (_) => VehicleFormPage(initialVehicle: vehicle!),
+        fullscreenDialog: true,
+      ),
+    );
+    
+    if (result != null && context.mounted) {
+      // Update the vehicle and sync odometer stat
+      await context.read<VehicleRepository>().saveVehicle(result);
+      if (result.odometerKm != null) {
+        await context.read<VehicleStatRepository>().ensureOdometerStat(
+          result.id, 
+          result.odometerKm!,
+        );
+      }
+    }
   }
 }
 
@@ -587,17 +692,6 @@ class _TimelineEmptyState extends StatelessWidget {
   }
 }
 
-class _VehicleStat {
-  const _VehicleStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-}
 
 class _QuickAddSheetButton extends StatelessWidget {
   const _QuickAddSheetButton({required this.action, required this.onTap});

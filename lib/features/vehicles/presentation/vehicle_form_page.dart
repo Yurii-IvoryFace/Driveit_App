@@ -65,6 +65,11 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _setupInitialData();
+  }
+
+  void _initializeControllers() {
     _nameController = TextEditingController();
     _modelController = TextEditingController();
     _yearController = TextEditingController();
@@ -78,7 +83,9 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     _salePriceController = TextEditingController();
     _saleOdometerController = TextEditingController();
     _notesController = TextEditingController();
+  }
 
+  void _setupInitialData() {
     if (_isEditing) {
       for (final controller in [
         _nameController,
@@ -195,7 +202,13 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         : null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(titleText)),
+      backgroundColor: const Color(0xFF0F1418),
+      appBar: AppBar(
+        title: Text(titleText),
+        backgroundColor: const Color(0xFF0F1418),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,

@@ -89,18 +89,22 @@ class VehicleBrandCatalog {
   VehicleBrandCatalog({required this.assetPath});
 
   final String assetPath;
-  List<VehicleBrand>? _cache;
+  static List<VehicleBrand>? _globalCache;
 
   Future<List<VehicleBrand>> load() async {
-    final cached = _cache;
+    // Use global cache to avoid reloading the same data
+    final cached = _globalCache;
     if (cached != null) return cached;
+    
     final raw = await rootBundle.loadString(assetPath);
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
     final brands = decoded
         .map((entry) => entry as Map<String, dynamic>)
         .map(VehicleBrand.fromJson)
         .toList(growable: false);
-    _cache = brands;
+    
+    // Cache globally to share across all instances
+    _globalCache = brands;
     return brands;
   }
 }

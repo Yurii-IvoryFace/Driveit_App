@@ -1,5 +1,6 @@
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat_repository.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_form_page.dart';
 import 'package:driveit_app/features/vehicles/presentation/vehicle_details_page.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
@@ -18,43 +19,46 @@ class VehiclesListPageState extends State<VehiclesListPage> {
   Widget build(BuildContext context) {
     final repository = context.watch<VehicleRepository>();
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned.fill(
-          child: StreamBuilder<List<Vehicle>>(
-            stream: repository.watchVehicles(),
-            builder: (context, snapshot) {
-              final vehicles = snapshot.data ?? const <Vehicle>[];
-              if (vehicles.isEmpty) {
-                return const _EmptyGarage();
-              }
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-                itemCount: vehicles.length,
-                separatorBuilder: (context, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final vehicle = vehicles[index];
-                  return _VehicleTile(
-                    vehicle: vehicle,
-                    onManage: () => _showVehicleActions(vehicle),
-                    onSetPrimary: vehicle.isPrimary
-                        ? null
-                        : () => _setPrimaryVehicle(vehicle),
-                    onConfirmDismiss: () => _confirmDeleteVehicle(vehicle),
-                    onViewDetails: () => _openVehicleDetails(vehicle),
-                  );
-                },
-              );
-            },
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F1418),
+      body: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: StreamBuilder<List<Vehicle>>(
+              stream: repository.watchVehicles(),
+              builder: (context, snapshot) {
+                final vehicles = snapshot.data ?? const <Vehicle>[];
+                if (vehicles.isEmpty) {
+                  return const _EmptyGarage();
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+                  itemCount: vehicles.length,
+                  separatorBuilder: (context, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final vehicle = vehicles[index];
+                    return _VehicleTile(
+                      vehicle: vehicle,
+                      onManage: () => _showVehicleActions(vehicle),
+                      onSetPrimary: vehicle.isPrimary
+                          ? null
+                          : () => _setPrimaryVehicle(vehicle),
+                      onConfirmDismiss: () => _confirmDeleteVehicle(vehicle),
+                      onViewDetails: () => _openVehicleDetails(vehicle),
+                    );
+                  },
+                );
+              },
+            ),
           ),
-        ),
-        Positioned(
-          right: 20,
-          bottom: 90,
-          child: _AddVehicleButton(onPressed: showAddVehicleDialog),
-        ),
-      ],
+          Positioned(
+            right: 20,
+            bottom: 90,
+            child: _AddVehicleButton(onPressed: showAddVehicleDialog),
+          ),
+        ],
+      ),
     );
   }
 
@@ -67,6 +71,15 @@ class VehiclesListPageState extends State<VehiclesListPage> {
     );
     if (vehicle == null || !mounted) return;
     await context.read<VehicleRepository>().saveVehicle(vehicle);
+    
+    // Automatically create odometer stat if vehicle has odometer reading
+    if (vehicle.odometerKm != null) {
+      await context.read<VehicleStatRepository>().ensureOdometerStat(
+        vehicle.id, 
+        vehicle.odometerKm!,
+      );
+    }
+    
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${vehicle.displayName} added to your garage')),
@@ -78,6 +91,9 @@ class VehiclesListPageState extends State<VehiclesListPage> {
       context: context,
       showDragHandle: true,
       backgroundColor: const Color(0xFF161B1F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         final textTheme = Theme.of(context).textTheme;
         return SafeArea(
@@ -120,7 +136,7 @@ class VehiclesListPageState extends State<VehiclesListPage> {
                     : () =>
                           Navigator.of(context).pop(_VehicleAction.setPrimary),
               ),
-              const Divider(height: 0),
+              const Divider(height: 0, color: Color(0xFF22303A)),
               ListTile(
                 leading: const Icon(
                   Icons.delete_outline,
@@ -180,15 +196,17 @@ class VehiclesListPageState extends State<VehiclesListPage> {
         await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete vehicle'),
+            backgroundColor: const Color(0xFF161B1F),
+            title: const Text('Delete vehicle', style: TextStyle(color: Colors.white)),
             content: Text(
               'Are you sure you want to delete ${vehicle.displayName}? '
               'This action cannot be undone.',
+              style: const TextStyle(color: Colors.white70),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
@@ -212,14 +230,16 @@ class VehiclesListPageState extends State<VehiclesListPage> {
         await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete vehicle'),
+            backgroundColor: const Color(0xFF161B1F),
+            title: const Text('Delete vehicle', style: TextStyle(color: Colors.white)),
             content: Text(
               'Delete ${vehicle.displayName}? This cannot be undone.',
+              style: const TextStyle(color: Colors.white70),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(

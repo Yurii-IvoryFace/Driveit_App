@@ -31,7 +31,8 @@ class _BrandSelectorFieldState extends State<BrandSelectorField> {
   @override
   void initState() {
     super.initState();
-    _loadCatalog();
+    // Defer catalog loading until user actually opens the picker
+    // This prevents blocking the form initialization
   }
 
   @override
@@ -55,7 +56,7 @@ class _BrandSelectorFieldState extends State<BrandSelectorField> {
         isEmpty: brand == null,
         child: brand == null
             ? Text(
-                'Select brand',
+                _isLoadingCatalog ? 'Loading brands...' : 'Select brand',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -84,15 +85,19 @@ class _BrandSelectorFieldState extends State<BrandSelectorField> {
 
   Future<void> _openPicker() async {
     FocusScope.of(context).unfocus();
+    
+    // Load catalog only when user opens the picker
     if (_isLoadingCatalog && _loadError == null) {
       await _loadCatalog();
       if (!mounted) return;
     }
+    
     if (_catalogBrands.isEmpty && _loadError != null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load brand catalog')),
       );
+      return;
     }
     final base = [..._catalogBrands];
     final current = widget.value;

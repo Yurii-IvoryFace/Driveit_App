@@ -15,6 +15,8 @@ import 'package:driveit_app/features/vehicles/data/vehicle_repository_impl.dart'
 import 'package:driveit_app/features/vehicles/data/vehicle_local_data_source.dart';
 import 'package:driveit_app/features/vehicles/data/dto/vehicle_dto.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle_repository.dart';
+import 'package:driveit_app/features/vehicles/data/vehicle_stat_repository_impl.dart';
+import 'package:driveit_app/features/vehicles/domain/vehicle_stat_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -30,6 +32,7 @@ void main() {
   late final RefuelingRepository refuelingRepository;
   late final ExpenseRepository expenseRepository;
   late final VehicleEventRepository vehicleEventRepository;
+  late final VehicleStatRepository vehicleStatRepository;
 
   if (config.useInMemoryStorage) {
     final inMemoryVehicleSource = InMemoryVehicleDataSource();
@@ -52,6 +55,7 @@ void main() {
     vehicleEventRepository = InMemoryVehicleEventRepository(
       seed: _buildSampleVehicleEvents(inMemoryVehicleSource.currentSnapshot),
     );
+    vehicleStatRepository = VehicleStatRepositoryImpl();
   } else {
     vehicleDataSource = HttpVehicleDataSource(
       client: http.Client(),
@@ -62,11 +66,15 @@ void main() {
     );
     expenseRepository = InMemoryExpenseRepository();
     vehicleEventRepository = InMemoryVehicleEventRepository();
+    vehicleStatRepository = VehicleStatRepositoryImpl();
   }
 
   final VehicleRepository vehicleRepository = VehicleRepositoryImpl(
     vehicleDataSource,
   );
+
+  // Initialize odometer stats for existing vehicles
+  _initializeOdometerStats(vehicleRepository, vehicleStatRepository);
 
   runApp(
     MultiProvider(
@@ -76,10 +84,28 @@ void main() {
         Provider<RefuelingRepository>.value(value: refuelingRepository),
         Provider<ExpenseRepository>.value(value: expenseRepository),
         Provider<VehicleEventRepository>.value(value: vehicleEventRepository),
+        Provider<VehicleStatRepository>.value(value: vehicleStatRepository),
       ],
       child: const DriveItApp(),
     ),
   );
+}
+
+Future<void> _initializeOdometerStats(
+  VehicleRepository vehicleRepository,
+  VehicleStatRepository statRepository,
+) async {
+  try {
+    final vehicles = await vehicleRepository.fetchVehicles();
+    for (final vehicle in vehicles) {
+      if (vehicle.odometerKm != null) {
+        await statRepository.ensureOdometerStat(vehicle.id, vehicle.odometerKm!);
+      }
+    }
+  } catch (e) {
+    // Ignore errors during initialization
+    print('Failed to initialize odometer stats: $e');
+  }
 }
 
 List<Expense> _buildSampleExpenses(
