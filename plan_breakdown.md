@@ -167,3 +167,23 @@
 - Added widget coverage for shared widgets (hero banner, action chip, media tile, section header).
 - Harmonized refueling add/edit modal with shared section headers and DriveActionChip date picker.
 - Updated vehicle event form to reuse shared action chips and section headers.
+
+## Progress log (2025-10-19)
+
+- Removed the temporary driver avatar from home timeline cards to reduce header noise ahead of the richer driver experience.
+- Added a driver placeholder block to vehicle event details (avatar, name, email) so every event surfaces its future owner context in a consistent location.
+- Persisted refuel volume, price-per-liter, and fill status on event submissions and surfaced them across event details + timeline chips.
+- Hooked attachment chips into an in-app viewer (image zoom + PDF/text handling) to keep documents accessible without leaving the flow.
+- Wired pdf.js into `web/index.html` so the new PDF viewer boots correctly in Flutter web builds.
+- Styled refuel event details with a dedicated fuel metrics card (liters, price/L, full tank, total) to mirror the original UI mocks.
+- Refuel form cost fields now auto-solve in any direction (amount, volume, price per liter) so entering any two values calculates the third.
+
+- Centralized fuel type catalog and dropdown logic so vehicle and refuel forms use the same data source tied to the selected vehicle.
+
+### TODO (UI dedup backlog)
+- [ ] Promote a shared `DriveDatePickerChip` and replace manual `showDatePicker` wiring across event, refuel, and vehicle forms.
+- [ ] Extract a reusable fuel cost input row (amount/volume/price) shared by refuel event form and refuel modal sheet.
+- [ ] Wrap the “Full tank” toggle into a shared widget for refuel flows.
+- [ ] Factor the attachment chip wrap into a `DriveAttachmentList` used by event form/detail screens.
+- [ ] Publish a shared notes field component to remove repeated `TextFormField` setups.
+- [ ] Create a reusable disabled vehicle header block for forms that display the current vehicle.

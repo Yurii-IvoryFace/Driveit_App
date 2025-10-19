@@ -54,6 +54,10 @@ class VehicleEvent {
     this.amount,
     this.currency,
     this.serviceType,
+    this.fuelType,
+    this.volumeLiters,
+    this.pricePerLiter,
+    this.isFullTank,
     this.notes,
     this.attachments = const [],
     DateTime? createdAt,
@@ -69,6 +73,10 @@ class VehicleEvent {
   final double? amount;
   final String? currency;
   final String? serviceType;
+  final String? fuelType;
+  final double? volumeLiters;
+  final double? pricePerLiter;
+  final bool? isFullTank;
   final String? notes;
   final List<VehicleEventAttachment> attachments;
   final DateTime createdAt;
@@ -86,6 +94,10 @@ class VehicleEvent {
     double? amount,
     String? currency,
     String? serviceType,
+    String? fuelType,
+    double? volumeLiters,
+    double? pricePerLiter,
+    bool? isFullTank,
     String? notes,
     List<VehicleEventAttachment>? attachments,
     DateTime? createdAt,
@@ -101,6 +113,10 @@ class VehicleEvent {
       amount: amount ?? this.amount,
       currency: currency ?? this.currency,
       serviceType: serviceType ?? this.serviceType,
+      fuelType: fuelType ?? this.fuelType,
+      volumeLiters: volumeLiters ?? this.volumeLiters,
+      pricePerLiter: pricePerLiter ?? this.pricePerLiter,
+      isFullTank: isFullTank ?? this.isFullTank,
       notes: notes ?? this.notes,
       attachments: attachments ?? this.attachments,
       createdAt: createdAt ?? this.createdAt,

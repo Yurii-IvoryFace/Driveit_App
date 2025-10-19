@@ -420,6 +420,8 @@ class _EventCard extends StatelessWidget {
   final VehicleEvent event;
   final VoidCallback? onTap;
 
+  static final NumberFormat _litersFormat = NumberFormat('0.0');
+
   @override
   Widget build(BuildContext context) {
     final visuals = resolveEventVisual(event.type);
@@ -428,6 +430,9 @@ class _EventCard extends StatelessWidget {
         ? null
         : '${NumberFormat.decimalPattern().format(event.odometerKm)} km';
     final amountText = _formatAmount(event);
+    final locationText = event.location?.trim().isNotEmpty == true
+        ? event.location!.trim()
+        : 'Location not specified';
 
     final chips = <Widget>[];
     if (odometer != null) {
@@ -438,11 +443,71 @@ class _EventCard extends StatelessWidget {
         _EventMetaChip(icon: Icons.build_outlined, label: event.serviceType!),
       );
     }
-    if (amountText != null) {
-      chips.add(
-        _EventMetaChip(icon: Icons.payments_outlined, label: amountText),
+    if (event.type == VehicleEventType.refuel) {
+      final fuelType = event.fuelType?.trim();
+      final volume = event.volumeLiters;
+      final pricePerLiter = event.pricePerLiter;
+      final isFullTank = event.isFullTank;
+      if (fuelType != null && fuelType.isNotEmpty) {
+        chips.add(
+          _EventMetaChip(
+            icon: Icons.local_gas_station,
+            label: fuelType,
+          ),
+        );
+      }
+      if (volume != null) {
+        chips.add(
+          _EventMetaChip(
+            icon: Icons.local_gas_station_outlined,
+            label: '${_litersFormat.format(volume)} L',
+          ),
+        );
+      }
+      if (pricePerLiter != null) {
+        final currency = event.currency ?? '';
+        final prefix = currency.isEmpty ? '' : '$currency ';
+        chips.add(
+          _EventMetaChip(
+            icon: Icons.price_change_outlined,
+            label: '$prefix${pricePerLiter.toStringAsFixed(2)} /L',
+          ),
+        );
+      }
+      if (isFullTank != null) {
+        chips.add(
+          _EventMetaChip(
+            icon: isFullTank
+                ? Icons.check_circle_outline
+                : Icons.inventory_outlined,
+            label: isFullTank ? 'Full tank' : 'Partial fill',
+          ),
+        );
+      }
+    }
+
+    final trailingChildren = <Widget>[];
+    if (event.hasAttachments) {
+      trailingChildren.add(
+        const Icon(Icons.attach_file, size: 18, color: AppColors.textSecondary),
       );
     }
+    if (amountText != null) {
+      if (trailingChildren.isNotEmpty) {
+        trailingChildren.add(const SizedBox(width: 8));
+      }
+      trailingChildren.add(
+        Text(
+          amountText,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+    final Widget? locationTrailing = trailingChildren.isEmpty
+        ? null
+        : Row(mainAxisSize: MainAxisSize.min, children: trailingChildren);
 
     return DriveTimelineCard(
       icon: visuals.icon,
@@ -450,12 +515,11 @@ class _EventCard extends StatelessWidget {
       iconBackgroundColor: visuals.color.withValues(alpha: 0.18),
       title: event.title,
       dateLabel: dateText,
-      location: event.location?.trim().isNotEmpty == true
-          ? event.location!.trim()
-          : 'Location not specified',
+      location: locationText,
+      locationTrailing: locationTrailing,
       metaChips: chips,
       notes: event.notes,
-      hasAttachments: event.hasAttachments,
+      hasAttachments: locationTrailing == null && event.hasAttachments,
       onTap: onTap,
     );
   }

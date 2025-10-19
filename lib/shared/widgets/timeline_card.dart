@@ -17,6 +17,8 @@ class DriveTimelineCard extends StatelessWidget {
     this.hasAttachments = false,
     this.onTap,
     this.iconBackgroundColor,
+    this.locationTrailing,
+    this.headerTrailing,
   });
 
   final IconData icon;
@@ -30,6 +32,8 @@ class DriveTimelineCard extends StatelessWidget {
   final bool hasAttachments;
   final VoidCallback? onTap;
   final Color? iconBackgroundColor;
+  final Widget? locationTrailing;
+  final Widget? headerTrailing;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +73,10 @@ class DriveTimelineCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (headerTrailing != null) ...[
+                      headerTrailing!,
+                      const SizedBox(width: 8),
+                    ],
                     Text(
                       dateLabel,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -80,7 +88,7 @@ class DriveTimelineCard extends StatelessWidget {
                 if (location != null) ...[
                   const SizedBox(height: 6),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(
                         locationIcon,
@@ -98,15 +106,17 @@ class DriveTimelineCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (hasAttachments)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Icon(
-                            Icons.attach_file,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
+                      if (locationTrailing != null) ...[
+                        const SizedBox(width: 8),
+                        locationTrailing!,
+                      ] else if (hasAttachments) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.attach_file,
+                          size: 18,
+                          color: AppColors.textSecondary,
                         ),
+                      ],
                     ],
                   ),
                 ],

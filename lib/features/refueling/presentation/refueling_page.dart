@@ -331,25 +331,21 @@ class RefuelingViewState extends State<RefuelingView> {
                       ValueListenableBuilder<DateTime>(
                         valueListenable: date,
                         builder: (context, value, _) {
-                          return DriveActionChip(
+                          return DriveDatePickerChip(
                             icon: Icons.event_outlined,
-                            label: DateFormat('MMM d, yyyy').format(value),
                             color: AppColors.accent,
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: value,
-                                firstDate: DateTime.now().subtract(
-                                  const Duration(days: 730),
-                                ),
-                                lastDate: DateTime.now().add(
-                                  const Duration(days: 1),
-                                ),
-                              );
-                              if (picked != null) {
-                                date.value = picked;
-                                setModalState(() {});
-                              }
+                            date: value,
+                            firstDate: DateTime.now().subtract(
+                              const Duration(days: 730),
+                            ),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 1),
+                            ),
+                            labelBuilder: (date) =>
+                                DateFormat('MMM d, yyyy').format(date),
+                            onDateChanged: (picked) {
+                              date.value = picked;
+                              setModalState(() {});
                             },
                           );
                         },
@@ -398,55 +394,23 @@ class RefuelingViewState extends State<RefuelingView> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: volumeController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: 'Volume',
-                                suffixText: 'L',
-                              ),
-                              onChanged: (_) => setModalState(recomputePrice),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: costController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: 'Total cost',
-                              ),
-                              onChanged: (_) => setModalState(recomputePrice),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: priceController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Price per liter',
-                          suffixText: '/L',
-                        ),
+                      DriveFuelCostInputs(
+                        amountController: costController,
+                        volumeController: volumeController,
+                        priceController: priceController,
+                        amountLabel: 'Total cost',
+                        volumeLabel: 'Volume',
+                        priceLabel: 'Price per liter',
+                        volumeSuffix: 'L',
+                        priceSuffix: '/L',
+                        onAmountChanged: (_) => setModalState(recomputePrice),
+                        onVolumeChanged: (_) => setModalState(recomputePrice),
+                        onPriceChanged: (_) => setModalState(() {}),
                       ),
                       const SizedBox(height: 12),
                       const DriveSectionHeader(title: 'Additional details'),
                       const SizedBox(height: 12),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Full tank fill-up'),
+                      DriveFullTankSwitch(
                         value: isFullFill,
                         onChanged: (value) =>
                             setModalState(() => isFullFill = value),
@@ -459,13 +423,11 @@ class RefuelingViewState extends State<RefuelingView> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      TextField(
+                      DriveNotesField(
                         controller: notesController,
+                        label: 'Notes (optional)',
                         minLines: 2,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes (optional)',
-                        ),
                       ),
                       const SizedBox(height: 20),
                       SizedBox(

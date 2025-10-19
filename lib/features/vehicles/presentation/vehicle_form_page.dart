@@ -8,6 +8,7 @@ import 'package:driveit_app/features/vehicles/domain/vehicle_photo.dart';
 import 'package:driveit_app/features/vehicles/presentation/widgets/brand_selector_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:driveit_app/shared/widgets/widgets.dart';
+import 'package:driveit_app/shared/data/fuel_types.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -44,7 +45,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
 
   VehicleBrand? _selectedBrand;
   String? _brandError;
-  String? _primaryFuelType = _fuelTypes.first;
+  String? _primaryFuelType = FuelTypes.defaults.first;
   bool _hasSecondaryTank = false;
   String? _secondaryFuelType = 'LPG';
   String _volumeUnit = _volumeUnits.first;
@@ -116,7 +117,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         : vehicle.odometerKm.toString();
     _licenseController.text = vehicle.licensePlate ?? '';
     _vinController.text = vehicle.vin ?? '';
-    _primaryFuelType = vehicle.fuelType ?? _fuelTypes.first;
+    _primaryFuelType = vehicle.fuelType ?? FuelTypes.defaults.first;
     _hasSecondaryTank = vehicle.secondaryFuelType != null;
     _secondaryFuelType = vehicle.secondaryFuelType ?? _secondaryFuelType;
     _fuelCapacityPrimaryController.text =
@@ -470,11 +471,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         DropdownMenu<String>(
           initialSelection: _primaryFuelType,
           label: const Text('Primary fuel type'),
-          dropdownMenuEntries: _fuelTypes
-              .map(
-                (type) => DropdownMenuEntry<String>(value: type, label: type),
-              )
-              .toList(),
+          dropdownMenuEntries: FuelTypes.menuEntries(),
           onSelected: (value) {
             setState(() {
               _primaryFuelType = value;
@@ -554,11 +551,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
           DropdownMenu<String>(
             initialSelection: _secondaryFuelType,
             label: const Text('Secondary fuel type'),
-            dropdownMenuEntries: _fuelTypes
-                .map(
-                  (type) => DropdownMenuEntry<String>(value: type, label: type),
-                )
-                .toList(),
+            dropdownMenuEntries: FuelTypes.menuEntries(),
             onSelected: (value) => setState(() => _secondaryFuelType = value),
           ),
           const SizedBox(height: 16),
@@ -1546,16 +1539,5 @@ class _PendingPhoto {
 }
 
 enum _CoverAction { pickGallery, remove }
-
-const List<String> _fuelTypes = [
-  'Petrol',
-  'Diesel',
-  'Electric',
-  'Hybrid',
-  'LPG',
-  'CNG',
-  'Hydrogen',
-  'Other',
-];
 
 const List<String> _volumeUnits = ['l', 'gal'];

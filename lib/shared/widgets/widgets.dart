@@ -1,6 +1,12 @@
 export 'action_tile.dart';
 export 'attachment_chip.dart';
 export 'drive_action_chip.dart';
+export 'date_picker_chip.dart';
+export 'fuel_cost_inputs.dart';
+export 'full_tank_switch.dart';
+export 'attachment_chip_list.dart';
+export 'notes_field.dart';
+export 'vehicle_summary.dart';
 export 'drive_card.dart';
 export 'empty_state.dart';
 export 'hero_banner.dart';

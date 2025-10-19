@@ -1,5 +1,6 @@
 import 'package:driveit_app/features/events/domain/vehicle_event.dart';
 import 'package:driveit_app/features/events/domain/vehicle_event_repository.dart';
+import 'package:driveit_app/features/events/presentation/attachment_viewer.dart';
 import 'package:driveit_app/features/events/presentation/event_visuals.dart';
 import 'package:driveit_app/features/events/presentation/vehicle_event_form_page.dart';
 import 'package:driveit_app/features/vehicles/domain/vehicle.dart';
@@ -197,6 +198,12 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
                   value: amountText,
                   margin: const EdgeInsets.only(bottom: 16),
                 ),
+              if (_event.type == VehicleEventType.refuel) ...[
+                const SizedBox(height: 20),
+                const DriveSectionHeader(title: 'Fuel'),
+                const SizedBox(height: 12),
+                _buildFuelDetailsCard(),
+              ],
               if (_event.notes?.trim().isNotEmpty == true) ...[
                 const SizedBox(height: 20),
                 Text(
@@ -217,23 +224,16 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: _event.attachments
-                      .map(
-                        (attachment) => DriveAttachmentChip(
-                          icon:
-                              attachment.type ==
-                                  VehicleEventAttachmentType.photo
-                              ? Icons.photo_outlined
-                              : Icons.insert_drive_file_outlined,
-                          label: attachment.name,
-                        ),
-                      )
-                      .toList(),
+                DriveAttachmentChipList(
+                  attachments: _event.attachments,
+                  onTap: (attachment) =>
+                      showVehicleAttachment(context, attachment),
                 ),
               ],
+              const SizedBox(height: 28),
+              const DriveSectionHeader(title: 'Driver'),
+              const SizedBox(height: 12),
+              const _DriverPlaceholderCard(),
             ],
           ),
         ),
@@ -265,5 +265,196 @@ class _VehicleEventDetailsPageState extends State<VehicleEventDetailsPage> {
       decimalDigits: 2,
     );
     return formatter.format(amount);
+  }
+
+  String? _formatVolume(VehicleEvent event) {
+    final volume = event.volumeLiters;
+    if (volume == null) return null;
+    final formatter = NumberFormat('0.0');
+    return '${formatter.format(volume)} L';
+  }
+
+  String? _formatPricePerLiter(VehicleEvent event) {
+    final price = event.pricePerLiter;
+    if (price == null) return null;
+    final currency = event.currency ?? '';
+    final prefix = currency.isEmpty ? '' : '$currency ';
+    return '$prefix${price.toStringAsFixed(2)} /L';
+  }
+
+  DriveCard _buildFuelDetailsCard() {
+    final theme = Theme.of(context);
+    const fallbackValue = '\u2014';
+    final amountText = _formatAmount(_event) ?? fallbackValue;
+    final volumeText = _formatVolume(_event) ?? fallbackValue;
+    final pricePerLiterText = _formatPricePerLiter(_event) ?? fallbackValue;
+    final fullTankText = _event.isFullTank == null
+        ? fallbackValue
+        : (_event.isFullTank! ? 'Yes' : 'No');
+
+    return DriveCard(
+      borderRadius: 18,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.local_gas_station_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Fuel details',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const double spacing = 20;
+              final double maxWidth = constraints.maxWidth;
+              final double columnWidth = maxWidth >= 360
+                  ? (maxWidth - spacing) / 2
+                  : maxWidth;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: 16,
+                children: [
+                  _FuelMetric(
+                    label: 'Fuel type',
+                    value: _event.fuelType?.trim().isNotEmpty == true
+                        ? _event.fuelType!.trim()
+                        : fallbackValue,
+                    width: columnWidth,
+                  ),
+                  _FuelMetric(
+                    label: 'Liters',
+                    value: volumeText,
+                    width: columnWidth,
+                  ),
+                  _FuelMetric(
+                    label: 'Price (per L)',
+                    value: pricePerLiterText,
+                    width: columnWidth,
+                  ),
+                  _FuelMetric(
+                    label: 'Full tank',
+                    value: fullTankText,
+                    width: columnWidth,
+                  ),
+                  _FuelMetric(
+                    label: 'Total cost',
+                    value: amountText,
+                    width: columnWidth,
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DriverPlaceholderCard extends StatelessWidget {
+  const _DriverPlaceholderCard();
+
+  static const String _driverName = 'Google Driver (placeholder)';
+  static const String _driverEmail = 'driver.placeholder@gmail.com';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DriveCard(
+      borderRadius: 18,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundColor: AppColors.surfaceSecondary,
+            child: Icon(
+              Icons.person_outline,
+              size: 24,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _driverName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _driverEmail,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FuelMetric extends StatelessWidget {
+  const _FuelMetric({
+    required this.label,
+    required this.value,
+    required this.width,
+  });
+
+  final String label;
+  final String value;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
