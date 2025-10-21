@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/logger.dart';
 import '../../widgets/vehicle/vehicle_stats_section.dart';
 import '../../bloc/vehicle/vehicle_bloc.dart';
 import '../../bloc/vehicle/vehicle_event.dart';
@@ -24,6 +25,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
   @override
   void initState() {
     super.initState();
+    Logger.logNavigation(
+      'INIT',
+      'VehicleDetailScreen',
+      data: 'Vehicle ID: ${widget.vehicleId}',
+    );
     _tabController = TabController(length: 3, vsync: this);
     context.read<VehicleBloc>().add(LoadVehicleDetails(widget.vehicleId));
   }
@@ -105,6 +111,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
             pinned: true,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Logger.logNavigation('BACK_BUTTON', 'VehicleDetailScreen');
+                Navigator.of(context).pop();
+              },
+            ),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 vehicle.name,

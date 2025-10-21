@@ -264,6 +264,7 @@ class _VehiclePhotoAlbumScreenState extends State<VehiclePhotoAlbumScreen> {
           child: Column(
             children: [
               FloatingActionButton(
+                heroTag: "photo_edit_button",
                 onPressed: () {
                   // TODO: Edit photo
                 },
@@ -272,6 +273,7 @@ class _VehiclePhotoAlbumScreenState extends State<VehiclePhotoAlbumScreen> {
               ),
               const SizedBox(height: 8.0),
               FloatingActionButton(
+                heroTag: "photo_delete_button",
                 onPressed: () {
                   _showDeleteDialog(photos[_getCurrentIndex()]);
                 },

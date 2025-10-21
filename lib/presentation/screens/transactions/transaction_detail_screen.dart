@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/logger.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
@@ -24,6 +25,11 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   @override
   void initState() {
     super.initState();
+    Logger.logNavigation(
+      'INIT',
+      'TransactionDetailScreen',
+      data: 'Transaction ID: ${widget.transactionId}',
+    );
     context.read<TransactionBloc>().add(
       LoadTransactionEvent(widget.transactionId),
     );
@@ -36,6 +42,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         title: const Text('Transaction Details'),
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.onSurface,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Logger.logNavigation('BACK_BUTTON', 'TransactionDetailScreen');
+            Navigator.of(context).pop();
+          },
+        ),
         actions: [
           IconButton(icon: const Icon(Icons.edit), onPressed: _editTransaction),
           IconButton(

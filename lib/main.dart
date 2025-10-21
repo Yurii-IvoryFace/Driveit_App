@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/di/injection_container.dart';
-import 'core/navigation/app_router.dart';
+import 'core/navigation/app_navigator_observer.dart';
+import 'presentation/screens/shell/app_shell.dart';
 import 'domain/usecases/vehicle_usecases.dart' as vehicle_usecases;
 import 'domain/usecases/transaction_usecases.dart' as transaction_usecases;
 import 'domain/usecases/refueling_usecases.dart' as refueling_usecases;
@@ -12,6 +13,9 @@ import 'presentation/bloc/transaction/transaction_bloc.dart';
 import 'presentation/bloc/home/home_bloc.dart';
 import 'presentation/bloc/refueling/refueling_bloc.dart';
 import 'presentation/bloc/reports/reports_bloc.dart';
+
+// Global NavigatorObserver for navigation tracking
+final AppNavigatorObserver appNavigatorObserver = AppNavigatorObserver();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -165,11 +169,12 @@ class DriveItApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp.router(
+      child: MaterialApp(
         title: 'DriveIt',
         theme: AppTheme.dark,
         debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter.router,
+        home: const AppShell(),
+        navigatorObservers: [appNavigatorObserver],
       ),
     );
   }

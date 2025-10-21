@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/logger.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
@@ -21,7 +22,8 @@ class TransactionsListScreen extends StatefulWidget {
   State<TransactionsListScreen> createState() => _TransactionsListScreenState();
 }
 
-class _TransactionsListScreenState extends State<TransactionsListScreen> {
+class _TransactionsListScreenState extends State<TransactionsListScreen>
+    with WidgetsBindingObserver {
   TransactionType? _selectedType;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -30,8 +32,25 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
   @override
   void initState() {
     super.initState();
+    Logger.logNavigation('INIT', 'TransactionsListScreen');
+    WidgetsBinding.instance.addObserver(this);
     _selectedVehicleId = widget.vehicleId;
     _loadTransactions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      // Reload transactions when app resumes
+      _loadTransactions();
+    }
   }
 
   void _loadTransactions() {
@@ -59,10 +78,15 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
+            tooltip: 'Filter',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadTransactions,
+            onPressed: () {
+              Logger.logNavigation('MANUAL_REFRESH', 'TransactionsListScreen');
+              _loadTransactions();
+            },
+            tooltip: 'Refresh',
           ),
         ],
       ),
@@ -70,27 +94,33 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
         children: [
           if (_hasActiveFilters()) _buildFilterChips(),
           Expanded(
-            child: BlocBuilder<TransactionBloc, TransactionState>(
-              builder: (context, state) {
-                if (state is TransactionLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is TransactionLoaded) {
-                  return _buildTransactionsList(state.transactions);
-                } else if (state is TransactionFiltered) {
-                  return _buildTransactionsList(state.transactions);
-                } else if (state is TransactionEmpty) {
-                  return _buildEmptyState(state.message);
-                } else if (state is TransactionError) {
-                  return _buildErrorState(state.message);
-                } else {
-                  return const Center(child: Text('No transactions'));
-                }
+            child: BlocListener<TransactionBloc, TransactionState>(
+              listener: (context, state) {
+                // Handle state changes if needed
               },
+              child: BlocBuilder<TransactionBloc, TransactionState>(
+                builder: (context, state) {
+                  if (state is TransactionLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is TransactionLoaded) {
+                    return _buildTransactionsList(state.transactions);
+                  } else if (state is TransactionFiltered) {
+                    return _buildTransactionsList(state.transactions);
+                  } else if (state is TransactionEmpty) {
+                    return _buildEmptyState(state.message);
+                  } else if (state is TransactionError) {
+                    return _buildErrorState(state.message);
+                  } else {
+                    return const Center(child: Text('No transactions'));
+                  }
+                },
+              ),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "transaction_add_button",
         onPressed: _addTransaction,
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
@@ -226,7 +256,14 @@ class _TransactionsListScreenState extends State<TransactionsListScreen> {
               ),
           ],
         ),
-        onTap: () => _viewTransaction(transaction),
+        onTap: () {
+          Logger.logNavigation(
+            'NAVIGATE_TO_DETAIL',
+            'TransactionDetailScreen',
+            data: 'Transaction ID: ${transaction.id}',
+          );
+          _viewTransaction(transaction);
+        },
       ),
     );
   }

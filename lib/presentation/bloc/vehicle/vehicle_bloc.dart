@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/usecases/vehicle_usecases.dart';
+import '../../../core/utils/logger.dart';
 import 'vehicle_event.dart';
 import 'vehicle_state.dart';
 
@@ -94,12 +95,28 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
     LoadVehicles event,
     Emitter<VehicleState> emit,
   ) async {
-    emit(VehicleLoading());
+    Logger.logBlocEvent(
+      'VehicleBloc',
+      'LoadVehicles',
+      data: 'Current state: ${state.runtimeType}',
+    );
+
+    // Don't show loading if we already have data
+    if (state is! VehicleLoaded) {
+      emit(VehicleLoading());
+      Logger.logBlocState('VehicleBloc', 'VehicleLoading');
+    }
     try {
       final vehicles = await getVehicles();
       emit(VehicleLoaded(vehicles));
+      Logger.logBlocState(
+        'VehicleBloc',
+        'VehicleLoaded',
+        data: 'Loaded ${vehicles.length} vehicles',
+      );
     } catch (e) {
       emit(VehicleError(e.toString()));
+      Logger.logBlocState('VehicleBloc', 'VehicleError', data: e.toString());
     }
   }
 

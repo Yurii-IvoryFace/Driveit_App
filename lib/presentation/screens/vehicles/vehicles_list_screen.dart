@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/vehicle.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/logger.dart';
 import '../../widgets/vehicle/vehicle_card.dart';
 import '../../bloc/vehicle/vehicle_bloc.dart';
 import '../../bloc/vehicle/vehicle_event.dart';
@@ -16,24 +17,31 @@ class VehiclesListScreen extends StatefulWidget {
   State<VehiclesListScreen> createState() => _VehiclesListScreenState();
 }
 
-class _VehiclesListScreenState extends State<VehiclesListScreen> {
+class _VehiclesListScreenState extends State<VehiclesListScreen>
+    with WidgetsBindingObserver {
   bool _isGridView = true;
 
   @override
   void initState() {
     super.initState();
+    Logger.logNavigation('INIT', 'VehiclesListScreen');
+    WidgetsBinding.instance.addObserver(this);
     context.read<VehicleBloc>().add(LoadVehicles());
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Reload vehicles when returning from other screens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<VehicleBloc>().add(LoadVehicles());
-      }
-    });
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      // Reload vehicles when app resumes
+      context.read<VehicleBloc>().add(LoadVehicles());
+    }
   }
 
   @override
@@ -46,11 +54,20 @@ class _VehiclesListScreenState extends State<VehiclesListScreen> {
         actions: [
           IconButton(
             onPressed: () {
+              Logger.logNavigation('MANUAL_REFRESH', 'VehiclesListScreen');
+              context.read<VehicleBloc>().add(LoadVehicles());
+            },
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
+            onPressed: () {
               setState(() {
                 _isGridView = !_isGridView;
               });
             },
             icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
+            tooltip: _isGridView ? 'List view' : 'Grid view',
           ),
         ],
       ),
@@ -116,6 +133,7 @@ class _VehiclesListScreenState extends State<VehiclesListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "vehicle_add_button",
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const VehicleFormScreen()),
@@ -192,6 +210,11 @@ class _VehiclesListScreenState extends State<VehiclesListScreen> {
           return VehicleCard(
             vehicle: vehicle,
             onTap: () {
+              Logger.logNavigation(
+                'NAVIGATE_TO_DETAIL',
+                'VehicleDetailScreen',
+                data: 'Vehicle ID: ${vehicle.id}',
+              );
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) =>
@@ -219,6 +242,11 @@ class _VehiclesListScreenState extends State<VehiclesListScreen> {
           return VehicleCard(
             vehicle: vehicle,
             onTap: () {
+              Logger.logNavigation(
+                'NAVIGATE_TO_DETAIL',
+                'VehicleDetailScreen',
+                data: 'Vehicle ID: ${vehicle.id}',
+              );
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) =>

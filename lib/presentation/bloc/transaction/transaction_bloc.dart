@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/usecases/transaction_usecases.dart';
+import '../../../core/utils/logger.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
 
@@ -65,16 +66,37 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     LoadTransactions event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
+    Logger.logBlocEvent(
+      'TransactionBloc',
+      'LoadTransactions',
+      data: 'Current state: ${state.runtimeType}',
+    );
+
+    // Don't show loading if we already have data
+    if (state is! TransactionLoaded) {
+      emit(TransactionLoading());
+      Logger.logBlocState('TransactionBloc', 'TransactionLoading');
+    }
     try {
       final transactions = await _getTransactions();
       if (transactions.isEmpty) {
         emit(TransactionEmpty());
+        Logger.logBlocState('TransactionBloc', 'TransactionEmpty');
       } else {
         emit(TransactionLoaded(transactions: transactions));
+        Logger.logBlocState(
+          'TransactionBloc',
+          'TransactionLoaded',
+          data: 'Loaded ${transactions.length} transactions',
+        );
       }
     } catch (e) {
       emit(TransactionError(message: e.toString()));
+      Logger.logBlocState(
+        'TransactionBloc',
+        'TransactionError',
+        data: e.toString(),
+      );
     }
   }
 
@@ -82,7 +104,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     LoadTransactionsByVehicle event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionLoading());
+    // Don't show loading if we already have data
+    if (state is! TransactionLoaded) {
+      emit(TransactionLoading());
+    }
     try {
       final transactions = await _getTransactionsByVehicle(event.vehicleId);
       if (transactions.isEmpty) {

@@ -88,6 +88,7 @@ class _ReportsScreenState extends State<ReportsScreen>
       backgroundColor: AppColors.background,
       body: TabBarView(
         controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           OverviewTab(
             vehicleId: _selectedVehicleId,

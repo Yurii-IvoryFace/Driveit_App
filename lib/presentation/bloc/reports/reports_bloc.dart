@@ -23,6 +23,11 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   _getRefuelingEntriesByDateRange;
   final refueling_usecases.GetRefuelingStatistics _getRefuelingStatistics;
 
+  // Cache for loaded data
+  Map<String, dynamic>? _cachedCostsData;
+  Map<String, dynamic>? _cachedFuelData;
+  DateTime? _lastCacheTime;
+
   ReportsBloc({
     required transaction_usecases.GetTransactions getTransactions,
     required transaction_usecases.GetTransactionsByVehicle
@@ -97,6 +102,22 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadFuelData event,
     Emitter<ReportsState> emit,
   ) async {
+    // Check cache first
+    if (_cachedFuelData != null &&
+        _lastCacheTime != null &&
+        DateTime.now().difference(_lastCacheTime!).inMinutes < 5) {
+      emit(
+        FuelDataLoaded(
+          refuelingEntries: _cachedFuelData!['refuelingEntries'] ?? [],
+          fuelStatistics: _cachedFuelData!['fuelStatistics'] ?? {},
+          vehicleId: event.vehicleId,
+          startDate: event.startDate,
+          endDate: event.endDate,
+        ),
+      );
+      return;
+    }
+
     emit(ReportsLoading());
     try {
       final refuelingEntries = await _loadRefuelingEntries(
@@ -109,6 +130,13 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         startDate: event.startDate,
         endDate: event.endDate,
       );
+
+      // Cache the data
+      _cachedFuelData = {
+        'refuelingEntries': refuelingEntries,
+        'fuelStatistics': fuelStatistics,
+      };
+      _lastCacheTime = DateTime.now();
 
       emit(
         FuelDataLoaded(
@@ -128,6 +156,22 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     LoadCostsData event,
     Emitter<ReportsState> emit,
   ) async {
+    // Check cache first
+    if (_cachedCostsData != null &&
+        _lastCacheTime != null &&
+        DateTime.now().difference(_lastCacheTime!).inMinutes < 5) {
+      emit(
+        CostsDataLoaded(
+          transactions: _cachedCostsData!['transactions'] ?? [],
+          costStatistics: _cachedCostsData!['costStatistics'] ?? {},
+          vehicleId: event.vehicleId,
+          startDate: event.startDate,
+          endDate: event.endDate,
+        ),
+      );
+      return;
+    }
+
     emit(ReportsLoading());
     try {
       final transactions = await _loadTransactions(
@@ -140,6 +184,13 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
         startDate: event.startDate,
         endDate: event.endDate,
       );
+
+      // Cache the data
+      _cachedCostsData = {
+        'transactions': transactions,
+        'costStatistics': costStatistics,
+      };
+      _lastCacheTime = DateTime.now();
 
       emit(
         CostsDataLoaded(

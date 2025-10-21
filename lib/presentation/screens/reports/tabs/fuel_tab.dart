@@ -144,7 +144,7 @@ class _FuelTabState extends State<FuelTab> {
               child: _buildStatCard(
                 context,
                 'Total Volume',
-                '${statistics['totalVolume']?.toStringAsFixed(1) ?? '0.0'} L',
+                '${(statistics['totalVolume'] ?? 0.0).toDouble().toStringAsFixed(1)} L',
                 Icons.local_gas_station,
                 AppColors.primary,
               ),
@@ -154,7 +154,9 @@ class _FuelTabState extends State<FuelTab> {
               child: _buildStatCard(
                 context,
                 'Total Cost',
-                ChartDataUtils.formatCurrency(statistics['totalAmount'] ?? 0.0),
+                ChartDataUtils.formatCurrency(
+                  (statistics['totalAmount'] ?? 0.0).toDouble(),
+                ),
                 Icons.attach_money,
                 AppColors.success,
               ),
@@ -168,7 +170,7 @@ class _FuelTabState extends State<FuelTab> {
               child: _buildStatCard(
                 context,
                 'Avg Price',
-                '${statistics['averagePricePerLiter']?.toStringAsFixed(2) ?? '0.00'} ₴/L',
+                '${(statistics['averagePricePerLiter'] ?? 0.0).toDouble().toStringAsFixed(2)} ₴/L',
                 Icons.trending_up,
                 AppColors.warning,
               ),
@@ -179,7 +181,7 @@ class _FuelTabState extends State<FuelTab> {
                 context,
                 'Avg Efficiency',
                 ChartDataUtils.formatFuelConsumption(
-                  statistics['averageEfficiency'] ?? 0.0,
+                  (statistics['averageEfficiency'] ?? 0.0).toDouble(),
                 ),
                 Icons.speed,
                 AppColors.info,

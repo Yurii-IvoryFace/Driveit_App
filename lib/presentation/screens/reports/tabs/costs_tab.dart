@@ -145,7 +145,9 @@ class _CostsTabState extends State<CostsTab> {
               child: _buildStatCard(
                 context,
                 'Total Cost',
-                ChartDataUtils.formatCurrency(statistics['totalAmount'] ?? 0.0),
+                ChartDataUtils.formatCurrency(
+                  (statistics['totalAmount'] ?? 0.0).toDouble(),
+                ),
                 Icons.attach_money,
                 AppColors.primary,
               ),
@@ -170,7 +172,7 @@ class _CostsTabState extends State<CostsTab> {
                 context,
                 'Avg Cost',
                 ChartDataUtils.formatCurrency(
-                  statistics['averageAmount'] ?? 0.0,
+                  (statistics['averageAmount'] ?? 0.0).toDouble(),
                 ),
                 Icons.trending_up,
                 AppColors.warning,
@@ -182,7 +184,7 @@ class _CostsTabState extends State<CostsTab> {
                 context,
                 'This Month',
                 ChartDataUtils.formatCurrency(
-                  statistics['monthlyAmount'] ?? 0.0,
+                  (statistics['monthlyAmount'] ?? 0.0).toDouble(),
                 ),
                 Icons.calendar_month,
                 AppColors.info,
