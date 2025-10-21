@@ -7,7 +7,7 @@ import '../../../../core/utils/chart_data_utils.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/line_chart_widget.dart';
+import '../../../widgets/charts/universal_line_chart_widget.dart';
 
 class OdometerTab extends StatefulWidget {
   final String? vehicleId;
@@ -235,7 +235,7 @@ class _OdometerTabState extends State<OdometerTab> {
   Widget _buildOdometerTrendChart(BuildContext context, entries) {
     final spots = ChartDataUtils.getOdometerTrend(entries);
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Odometer Reading Trend',
       yAxisLabel: 'Kilometers',
@@ -276,7 +276,7 @@ class _OdometerTabState extends State<OdometerTab> {
       spots.add(FlSpot(i.toDouble(), distance.toDouble()));
     }
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Distance Between Refuelings',
       yAxisLabel: 'Kilometers',

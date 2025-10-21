@@ -3,18 +3,24 @@ import 'package:fl_chart/fl_chart.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-class PieChartWidget extends StatelessWidget {
+class UniversalPieChartWidget extends StatelessWidget {
   final List<PieChartSectionData> sections;
   final String title;
   final double? totalValue;
   final String? totalLabel;
+  final double? height;
+  final double? centerSpaceRadius;
+  final double? sectionRadius;
 
-  const PieChartWidget({
+  const UniversalPieChartWidget({
     super.key,
     required this.sections,
     required this.title,
     this.totalValue,
     this.totalLabel,
+    this.height = 140,
+    this.centerSpaceRadius = 25,
+    this.sectionRadius = 55,
   });
 
   @override
@@ -38,7 +44,7 @@ class PieChartWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 200,
+            height: height,
             child: Row(
               children: [
                 Expanded(
@@ -46,8 +52,18 @@ class PieChartWidget extends StatelessWidget {
                   child: PieChart(
                     PieChartData(
                       sectionsSpace: 2,
-                      centerSpaceRadius: 60,
-                      sections: sections,
+                      centerSpaceRadius: centerSpaceRadius,
+                      sections: sections
+                          .map(
+                            (section) => PieChartSectionData(
+                              color: section.color,
+                              value: section.value,
+                              title: section.title,
+                              radius: sectionRadius,
+                              titleStyle: section.titleStyle,
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
                 ),

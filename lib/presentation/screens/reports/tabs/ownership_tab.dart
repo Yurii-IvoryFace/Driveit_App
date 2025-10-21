@@ -7,7 +7,7 @@ import '../../../../core/utils/chart_data_utils.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/pie_chart_widget.dart';
+import '../../../widgets/charts/universal_pie_chart_widget.dart';
 
 class OwnershipTab extends StatefulWidget {
   final String? vehicleId;
@@ -244,7 +244,7 @@ class _OwnershipTabState extends State<OwnershipTab> {
           color: AppColors.primary,
           value: refuelingPercentage,
           title: 'Fuel\n${refuelingPercentage.toStringAsFixed(1)}%',
-          radius: 100,
+          radius: 60,
           titleStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -261,7 +261,7 @@ class _OwnershipTabState extends State<OwnershipTab> {
           color: AppColors.success,
           value: otherPercentage,
           title: 'Other\n${otherPercentage.toStringAsFixed(1)}%',
-          radius: 100,
+          radius: 60,
           titleStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -271,7 +271,7 @@ class _OwnershipTabState extends State<OwnershipTab> {
       );
     }
 
-    return PieChartWidget(
+    return UniversalPieChartWidget(
       sections: sections,
       title: 'Cost Breakdown',
       totalValue: totalCost,

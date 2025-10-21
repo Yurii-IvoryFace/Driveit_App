@@ -7,7 +7,7 @@ import '../../../../core/utils/chart_data_utils.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/line_chart_widget.dart';
+import '../../../widgets/charts/universal_line_chart_widget.dart';
 
 class OverviewTab extends StatefulWidget {
   final String? vehicleId;
@@ -226,7 +226,7 @@ class _OverviewTabState extends State<OverviewTab> {
   Widget _buildCostTrendChart(BuildContext context, Map<String, dynamic> data) {
     final spots = data['costTrend'] as List<FlSpot>? ?? [];
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Cost Trend',
       yAxisLabel: 'Cost (₴)',
@@ -241,7 +241,7 @@ class _OverviewTabState extends State<OverviewTab> {
   ) {
     final spots = data['fuelConsumption'] as List<FlSpot>? ?? [];
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Fuel Consumption Trend',
       yAxisLabel: 'L/100km',

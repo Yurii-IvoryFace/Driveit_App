@@ -72,7 +72,8 @@ class _ReportsScreenState extends State<ReportsScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
+          isScrollable: false,
+          tabAlignment: TabAlignment.fill,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.onSurface.withValues(alpha: 0.6),
           indicatorColor: AppColors.primary,

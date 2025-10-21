@@ -7,9 +7,9 @@ import '../../../../domain/entities/transaction.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/line_chart_widget.dart';
-import '../../../widgets/charts/bar_chart_widget.dart';
-import '../../../widgets/charts/pie_chart_widget.dart';
+import '../../../widgets/charts/universal_line_chart_widget.dart';
+import '../../../widgets/charts/universal_bar_chart_widget.dart';
+import '../../../widgets/charts/universal_pie_chart_widget.dart';
 
 class CostsTab extends StatefulWidget {
   final String? vehicleId;
@@ -242,7 +242,7 @@ class _CostsTabState extends State<CostsTab> {
     final transactionList = transactions.cast<Transaction>();
     final spots = ChartDataUtils.getCostTrendSpots(transactionList);
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Cost Trend Over Time',
       yAxisLabel: 'Cost (₴)',
@@ -258,7 +258,7 @@ class _CostsTabState extends State<CostsTab> {
     final transactionList = transactions.cast<Transaction>();
     final bars = ChartDataUtils.getMonthlyCostBars(transactionList);
 
-    return BarChartWidget(
+    return UniversalBarChartWidget(
       barGroups: bars,
       title: 'Monthly Costs',
       yAxisLabel: 'Cost (₴)',
@@ -278,7 +278,7 @@ class _CostsTabState extends State<CostsTab> {
       (sum, t) => sum + (t.amount?.toDouble() ?? 0.0),
     );
 
-    return PieChartWidget(
+    return UniversalPieChartWidget(
       sections: sections,
       title: 'Costs by Category',
       totalValue: totalCost,

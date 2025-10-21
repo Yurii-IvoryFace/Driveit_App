@@ -8,7 +8,7 @@ import '../../../../domain/entities/refueling_entry.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/line_chart_widget.dart';
+import '../../../widgets/charts/universal_line_chart_widget.dart';
 
 class FuelTab extends StatefulWidget {
   final String? vehicleId;
@@ -239,7 +239,7 @@ class _FuelTabState extends State<FuelTab> {
     final refuelingEntries = entries.cast<RefuelingEntry>();
     final spots = ChartDataUtils.getFuelConsumptionSpots(refuelingEntries);
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Fuel Consumption Trend',
       yAxisLabel: 'L/100km',
@@ -250,11 +250,13 @@ class _FuelTabState extends State<FuelTab> {
 
   Widget _buildFuelVolumeChart(BuildContext context, List<dynamic> entries) {
     final refuelingEntries = entries.cast<RefuelingEntry>();
+    // Sort by date to ensure chronological order
+    refuelingEntries.sort((a, b) => a.date.compareTo(b.date));
     final spots = refuelingEntries.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.volumeLiters);
     }).toList();
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Fuel Volume per Refueling',
       yAxisLabel: 'Liters',
@@ -265,11 +267,13 @@ class _FuelTabState extends State<FuelTab> {
 
   Widget _buildFuelPriceChart(BuildContext context, List<dynamic> entries) {
     final refuelingEntries = entries.cast<RefuelingEntry>();
+    // Sort by date to ensure chronological order
+    refuelingEntries.sort((a, b) => a.date.compareTo(b.date));
     final spots = refuelingEntries.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.pricePerLiter);
     }).toList();
 
-    return LineChartWidget(
+    return UniversalLineChartWidget(
       spots: spots,
       title: 'Fuel Price Trend',
       yAxisLabel: '₴/L',

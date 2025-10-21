@@ -171,11 +171,13 @@ class VehicleCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4.0),
-                    Text(
-                      vehicle.fuelType!,
-                      style: TextStyle(
-                        fontSize: 12.0,
-                        color: AppColors.textSecondary,
+                    Expanded(
+                      child: Text(
+                        vehicle.fuelType!,
+                        style: TextStyle(
+                          fontSize: 12.0,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],

@@ -10,20 +10,26 @@ class ChartDataUtils {
     if (transactions.isEmpty) return [];
 
     // Group by date and sum amounts
-    final Map<String, double> dailyCosts = {};
+    final Map<DateTime, double> dailyCosts = {};
     for (final transaction in transactions) {
-      final dateKey =
-          '${transaction.date.year}-${transaction.date.month}-${transaction.date.day}';
-      dailyCosts[dateKey] =
-          (dailyCosts[dateKey] ?? 0) + (transaction.amount?.toDouble() ?? 0.0);
+      final date = DateTime(
+        transaction.date.year,
+        transaction.date.month,
+        transaction.date.day,
+      );
+      dailyCosts[date] =
+          (dailyCosts[date] ?? 0) + (transaction.amount?.toDouble() ?? 0.0);
     }
+
+    // Sort by date (chronological order)
+    final sortedDates = dailyCosts.keys.toList()..sort();
 
     // Convert to FlSpot format
     final spots = <FlSpot>[];
-    int index = 0;
-    for (final entry in dailyCosts.entries) {
-      spots.add(FlSpot(index.toDouble(), entry.value));
-      index++;
+    for (int i = 0; i < sortedDates.length; i++) {
+      final date = sortedDates[i];
+      final cost = dailyCosts[date]!;
+      spots.add(FlSpot(i.toDouble(), cost));
     }
 
     return spots;
@@ -93,7 +99,7 @@ class ChartDataUtils {
             value: percentage,
             title:
                 '${entry.key.displayName}\n${percentage.toStringAsFixed(1)}%',
-            radius: 100,
+            radius: 70,
             titleStyle: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
