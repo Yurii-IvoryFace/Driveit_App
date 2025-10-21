@@ -1,0 +1,10 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'transaction_dao.dart';
+
+// ignore_for_file: type=lint
+mixin _$TransactionDaoMixin on DatabaseAccessor<AppDatabase> {
+  $VehiclesTable get vehicles => attachedDatabase.vehicles;
+  $TransactionsTable get transactions => attachedDatabase.transactions;
+  $AttachmentsTable get attachments => attachedDatabase.attachments;
+}
