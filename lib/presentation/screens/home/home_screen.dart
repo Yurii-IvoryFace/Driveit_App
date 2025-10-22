@@ -7,12 +7,13 @@ import '../../bloc/home/home_event.dart';
 import '../../bloc/home/home_state.dart';
 import '../../bloc/vehicle/vehicle_bloc.dart';
 import '../../bloc/vehicle/vehicle_event.dart';
+import '../../bloc/transaction/transaction_bloc.dart';
+import '../../bloc/transaction/transaction_state.dart';
 import '../../widgets/home/hero_banner.dart';
 import '../../widgets/home/stats_slider.dart';
 import '../../widgets/home/timeline_card.dart';
 import '../../widgets/home/quick_action_menu.dart';
 import '../vehicles/vehicles_list_screen.dart';
-import '../transactions/transactions_list_screen.dart';
 import '../transactions/transaction_form_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -48,32 +49,40 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          if (state is HomeLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
+      body: BlocListener<TransactionBloc, TransactionState>(
+        listener: (context, state) {
+          if (state is TransactionOperationSuccess) {
+            // Automatically refresh home data when transaction is added/updated
+            context.read<HomeBloc>().add(RefreshHomeData());
           }
-
-          if (state is HomeError) {
-            return _buildErrorState(context, state.message);
-          }
-
-          if (state is HomeNoPrimaryVehicle) {
-            return _buildNoPrimaryVehicleState(context, state);
-          }
-
-          if (state is HomeLoaded) {
-            return _buildHomeContent(context, state);
-          }
-
-          if (state is HomeRefreshing) {
-            return _buildHomeContent(context, state);
-          }
-
-          return _buildWelcomeState(context);
         },
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            if (state is HomeLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            }
+
+            if (state is HomeError) {
+              return _buildErrorState(context, state.message);
+            }
+
+            if (state is HomeNoPrimaryVehicle) {
+              return _buildNoPrimaryVehicleState(context, state);
+            }
+
+            if (state is HomeLoaded) {
+              return _buildHomeContent(context, state);
+            }
+
+            if (state is HomeRefreshing) {
+              return _buildHomeContent(context, state);
+            }
+
+            return _buildWelcomeState(context);
+          },
+        ),
       ),
     );
   }
@@ -156,16 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             if (state.recentTransactions.isNotEmpty) ...[
               const SizedBox(height: 32),
-              TimelineCard(
-                recentTransactions: state.recentTransactions,
-                onViewAll: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
-              ),
+              TimelineCard(recentTransactions: state.recentTransactions),
             ],
           ],
         ),
@@ -196,25 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
               StatsSlider(
                 vehicle: state.primaryVehicle!,
                 vehicleStats: state.vehicleStats,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
               ),
             ],
-            TimelineCard(
-              recentTransactions: state.recentTransactions,
-              onViewAll: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TransactionsListScreen(),
-                  ),
-                );
-              },
-            ),
+            TimelineCard(recentTransactions: state.recentTransactions),
             QuickActionMenu(
               onAddTransaction: () {
                 Navigator.of(context).push(

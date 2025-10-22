@@ -45,7 +45,7 @@ class StatsSlider extends StatelessWidget {
                 _buildStatCard(
                   context,
                   'Total Distance',
-                  '${vehicle.odometerKm ?? 0} km',
+                  '${_getTotalDistance()} km',
                   Icons.speed,
                   AppColors.primary,
                 ),
@@ -149,9 +149,16 @@ class StatsSlider extends StatelessWidget {
     return count.toString();
   }
 
+  String _getTotalDistance() {
+    if (vehicleStats == null) return '0';
+    final totalDistance = vehicleStats!['totalDistance'] as double? ?? 0.0;
+    return totalDistance.toStringAsFixed(0);
+  }
+
   String _getFuelEfficiency() {
-    // This would be calculated from fuel consumption data
-    // For now, return a placeholder
-    return '8.5';
+    if (vehicleStats == null) return '0.0';
+    final fuelEfficiency =
+        vehicleStats!['averageFuelEfficiency'] as double? ?? 0.0;
+    return fuelEfficiency.toStringAsFixed(1);
   }
 }

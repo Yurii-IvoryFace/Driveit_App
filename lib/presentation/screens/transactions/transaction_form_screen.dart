@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/vehicle.dart';
+import '../../../domain/usecases/validate_odometer.dart';
+import '../../../core/di/injection_container.dart';
 import '../../bloc/transaction/transaction_bloc.dart';
 import '../../bloc/transaction/transaction_event.dart';
 import '../../bloc/transaction/transaction_state.dart';
@@ -470,9 +472,46 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     );
   }
 
-  void _saveTransaction() {
+  Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedVehicleId == null) return;
+
+    final odometerKm = int.tryParse(_odometerController.text);
+
+    // Validate odometer if provided
+    if (odometerKm != null) {
+      final validateOdometer = getIt<ValidateOdometer>();
+
+      // Get the selected vehicle to get its current odometer
+      final vehicles = context.read<VehicleBloc>().state;
+      Vehicle? selectedVehicle;
+      if (vehicles is VehicleLoaded) {
+        selectedVehicle = vehicles.vehicles.firstWhere(
+          (v) => v.id == _selectedVehicleId,
+          orElse: () => throw StateError('Vehicle not found'),
+        );
+      }
+
+      final validationResult = await validateOdometer.call(
+        vehicleId: _selectedVehicleId!,
+        transactionId: widget.transaction?.id,
+        date: _selectedDate,
+        odometerKm: odometerKm,
+        vehicleOdometerKm: selectedVehicle?.odometerKm,
+      );
+
+      if (!validationResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              validationResult.errorMessage ?? 'Invalid odometer reading',
+            ),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+    }
 
     final transaction = Transaction(
       id: widget.transaction?.id ?? const Uuid().v4(),
@@ -481,7 +520,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       date: _selectedDate,
       amount: double.tryParse(_amountController.text),
       currency: _currency,
-      odometerKm: int.tryParse(_odometerController.text),
+      odometerKm: odometerKm,
       volumeLiters: double.tryParse(_volumeController.text),
       pricePerLiter: double.tryParse(_pricePerLiterController.text),
       fuelType: _fuelType,

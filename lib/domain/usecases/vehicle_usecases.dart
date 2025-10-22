@@ -50,6 +50,20 @@ class SetPrimaryVehicle {
   Future<void> call(String id) => repository.setPrimaryVehicle(id);
 }
 
+class UpdateVehicleOdometer {
+  final VehicleRepository _repository;
+
+  UpdateVehicleOdometer(this._repository);
+
+  Future<void> call(String vehicleId, int odometerKm) async {
+    final vehicle = await _repository.getVehicle(vehicleId);
+    if (vehicle != null) {
+      final updatedVehicle = vehicle.copyWith(odometerKm: odometerKm);
+      await _repository.saveVehicle(updatedVehicle);
+    }
+  }
+}
+
 class GetPrimaryVehicle {
   final VehicleRepository repository;
 

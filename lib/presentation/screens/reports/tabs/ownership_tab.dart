@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/chart_data_utils.dart';
+import '../../../../domain/entities/transaction.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/universal_pie_chart_widget.dart';
+import '../../../widgets/charts/improved_pie_chart_widget.dart';
 
 class OwnershipTab extends StatefulWidget {
   final String? vehicleId;
@@ -31,6 +31,22 @@ class _OwnershipTabState extends State<OwnershipTab> {
         endDate: widget.endDate,
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(OwnershipTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId ||
+        oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate) {
+      context.read<ReportsBloc>().add(
+        LoadOwnershipData(
+          vehicleId: widget.vehicleId,
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        ),
+      );
+    }
   }
 
   @override
@@ -232,47 +248,12 @@ class _OwnershipTabState extends State<OwnershipTab> {
     Map<String, dynamic> data,
   ) {
     final totalCost = data['totalCost'] ?? 0.0;
-    final refuelingCost = data['totalRefuelingCost'] ?? 0.0;
-    final otherCost = totalCost - refuelingCost;
+    final transactionList = data['transactions'] ?? <dynamic>[];
 
-    final sections = <PieChartSectionData>[];
-
-    if (refuelingCost > 0) {
-      final refuelingPercentage = (refuelingCost / totalCost) * 100;
-      sections.add(
-        PieChartSectionData(
-          color: AppColors.primary,
-          value: refuelingPercentage,
-          title: 'Fuel\n${refuelingPercentage.toStringAsFixed(1)}%',
-          radius: 60,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      );
-    }
-
-    if (otherCost > 0) {
-      final otherPercentage = (otherCost / totalCost) * 100;
-      sections.add(
-        PieChartSectionData(
-          color: AppColors.success,
-          value: otherPercentage,
-          title: 'Other\n${otherPercentage.toStringAsFixed(1)}%',
-          radius: 60,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      );
-    }
-
-    return UniversalPieChartWidget(
-      sections: sections,
+    return ImprovedPieChartWidget(
+      sections: ChartDataUtils.getTransactionTypePieData(
+        transactionList.cast<Transaction>(),
+      ),
       title: 'Cost Breakdown',
       totalValue: totalCost,
       totalLabel: 'Total Cost',

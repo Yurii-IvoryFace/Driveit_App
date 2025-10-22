@@ -251,8 +251,13 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<List<domain.Transaction>> getRecentTransactions(int limit) async {
-    final transactions = await getTransactions();
+  Future<List<domain.Transaction>> getRecentTransactions(
+    int limit, {
+    String? vehicleId,
+  }) async {
+    final transactions = vehicleId != null
+        ? await getTransactionsByVehicle(vehicleId)
+        : await getTransactions();
     transactions.sort((a, b) => b.date.compareTo(a.date));
     return transactions.take(limit).toList();
   }
@@ -288,6 +293,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
     Map<domain.TransactionType, int> typeCounts = {};
     Map<domain.TransactionType, double> typeAmounts = {};
 
+    // Calculate total distance from odometer readings
+    double totalDistance = 0.0;
+    List<int> odometerReadings = [];
+
     for (final transaction in transactions) {
       if (transaction.amount != null) {
         totalAmount += transaction.amount!;
@@ -295,11 +304,64 @@ class TransactionRepositoryImpl implements TransactionRepository {
         typeAmounts[transaction.type] =
             (typeAmounts[transaction.type] ?? 0) + transaction.amount!;
       }
+
+      if (transaction.odometerKm != null) {
+        odometerReadings.add(transaction.odometerKm!);
+      }
+    }
+
+    // Calculate total distance
+    if (odometerReadings.isNotEmpty) {
+      odometerReadings.sort();
+      totalDistance = (odometerReadings.last - odometerReadings.first)
+          .toDouble();
+    }
+
+    // Calculate fuel efficiency from refueling transactions
+    double averageFuelEfficiency = 0.0;
+    final refuelingTransactions = transactions
+        .where(
+          (t) =>
+              t.type == domain.TransactionType.refueling &&
+              t.odometerKm != null,
+        )
+        .toList();
+
+    if (refuelingTransactions.length >= 2) {
+      refuelingTransactions.sort((a, b) => a.date.compareTo(b.date));
+
+      double totalEfficiency = 0.0;
+      int efficiencyCount = 0;
+
+      for (int i = 0; i < refuelingTransactions.length - 1; i++) {
+        final current = refuelingTransactions[i];
+        final next = refuelingTransactions[i + 1];
+
+        if (current.odometerKm != null &&
+            next.odometerKm != null &&
+            current.volumeLiters != null &&
+            next.odometerKm! > current.odometerKm!) {
+          final distance = next.odometerKm! - current.odometerKm!;
+          final fuelUsed = current.volumeLiters!;
+
+          if (distance > 0 && fuelUsed > 0) {
+            final efficiency = (fuelUsed / distance) * 100;
+            totalEfficiency += efficiency;
+            efficiencyCount++;
+          }
+        }
+      }
+
+      if (efficiencyCount > 0) {
+        averageFuelEfficiency = totalEfficiency / efficiencyCount;
+      }
     }
 
     return {
       'totalAmount': totalAmount,
       'transactionCount': transactionCount,
+      'totalDistance': totalDistance,
+      'averageFuelEfficiency': averageFuelEfficiency,
       'typeCounts': typeCounts.map((k, v) => MapEntry(k.name, v)),
       'typeAmounts': typeAmounts.map((k, v) => MapEntry(k.name, v)),
       'averageAmount': transactionCount > 0

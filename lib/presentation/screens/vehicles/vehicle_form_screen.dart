@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../domain/entities/vehicle.dart';
+import '../../../domain/usecases/validate_odometer.dart';
+import '../../../core/di/injection_container.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/vehicle/brand_selector_field.dart';
 import '../../bloc/vehicle/vehicle_bloc.dart';
@@ -349,43 +351,76 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
     }
   }
 
-  void _saveVehicle() {
-    if (_formKey.currentState!.validate()) {
-      final vehicle = Vehicle(
-        id: widget.vehicle?.id ?? const Uuid().v4(),
-        name: _nameController.text.trim(),
-        make: _makeController.text.trim(),
-        model: _modelController.text.trim(),
-        year: int.parse(_yearController.text),
-        vin: _vinController.text.trim().isEmpty
-            ? null
-            : _vinController.text.trim(),
-        licensePlate: _licensePlateController.text.trim().isEmpty
-            ? null
-            : _licensePlateController.text.trim(),
-        fuelType: _selectedFuelType,
-        odometerKm: _odometerController.text.trim().isEmpty
-            ? null
-            : int.tryParse(_odometerController.text.trim()),
-        purchaseDate: _purchaseDate,
-        purchasePrice: _purchasePriceController.text.trim().isEmpty
-            ? null
-            : double.tryParse(_purchasePriceController.text.trim()),
-        purchaseOdometerKm: _purchaseOdometerController.text.trim().isEmpty
-            ? null
-            : int.tryParse(_purchaseOdometerController.text.trim()),
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        isPrimary: _isPrimary,
-        createdAt: widget.vehicle?.createdAt ?? DateTime.now(),
-        updatedAt: DateTime.now(),
+  Future<void> _saveVehicle() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final odometerKm = _odometerController.text.trim().isEmpty
+        ? null
+        : int.tryParse(_odometerController.text.trim());
+
+    // Validate odometer if provided and this is an update
+    if (odometerKm != null && widget.vehicle != null) {
+      final validateOdometer = getIt<ValidateOdometer>();
+
+      final validationResult = await validateOdometer.validateVehicleOdometer(
+        vehicleId: widget.vehicle!.id,
+        newOdometerKm: odometerKm,
       );
 
-      if (widget.vehicle == null) {
-        context.read<VehicleBloc>().add(AddVehicle(vehicle));
-      } else {
-        context.read<VehicleBloc>().add(UpdateVehicle(vehicle));
+      if (!validationResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              validationResult.errorMessage ?? 'Invalid odometer reading',
+            ),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+    }
+
+    final vehicle = Vehicle(
+      id: widget.vehicle?.id ?? const Uuid().v4(),
+      name: _nameController.text.trim(),
+      make: _makeController.text.trim(),
+      model: _modelController.text.trim(),
+      year: int.parse(_yearController.text),
+      vin: _vinController.text.trim().isEmpty
+          ? null
+          : _vinController.text.trim(),
+      licensePlate: _licensePlateController.text.trim().isEmpty
+          ? null
+          : _licensePlateController.text.trim(),
+      fuelType: _selectedFuelType,
+      odometerKm: odometerKm,
+      purchaseDate: _purchaseDate,
+      purchasePrice: _purchasePriceController.text.trim().isEmpty
+          ? null
+          : double.tryParse(_purchasePriceController.text.trim()),
+      purchaseOdometerKm: _purchaseOdometerController.text.trim().isEmpty
+          ? null
+          : int.tryParse(_purchaseOdometerController.text.trim()),
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
+      isPrimary:
+          false, // Will be set properly by SetPrimaryVehicleEvent if needed
+      createdAt: widget.vehicle?.createdAt ?? DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    if (widget.vehicle == null) {
+      context.read<VehicleBloc>().add(AddVehicle(vehicle));
+      // If this is a new vehicle and it's set as primary, set it as primary
+      if (_isPrimary) {
+        context.read<VehicleBloc>().add(SetPrimaryVehicleEvent(vehicle.id));
+      }
+    } else {
+      context.read<VehicleBloc>().add(UpdateVehicle(vehicle));
+      // If this vehicle is set as primary, set it as primary
+      if (_isPrimary) {
+        context.read<VehicleBloc>().add(SetPrimaryVehicleEvent(vehicle.id));
       }
     }
   }

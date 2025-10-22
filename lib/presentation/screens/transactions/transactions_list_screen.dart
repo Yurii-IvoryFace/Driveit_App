@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/di/injection_container.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/vehicle.dart';
+import '../../../domain/usecases/vehicle_usecases.dart' as vehicle_usecases;
 import '../../bloc/transaction/transaction_bloc.dart';
 import '../../bloc/transaction/transaction_event.dart';
 import '../../bloc/transaction/transaction_state.dart';
@@ -35,7 +37,23 @@ class _TransactionsListScreenState extends State<TransactionsListScreen>
     Logger.logNavigation('INIT', 'TransactionsListScreen');
     WidgetsBinding.instance.addObserver(this);
     _selectedVehicleId = widget.vehicleId;
+    _initializeVehicleFilter();
+  }
+
+  Future<void> _initializeVehicleFilter() async {
+    _selectedVehicleId ??= await _loadPrimaryVehicleId();
     _loadTransactions();
+  }
+
+  Future<String?> _loadPrimaryVehicleId() async {
+    try {
+      final getPrimaryVehicle = getIt<vehicle_usecases.GetPrimaryVehicle>();
+      final primaryVehicle = await getPrimaryVehicle();
+      return primaryVehicle?.id;
+    } catch (e) {
+      Logger.log('Failed to load primary vehicle', error: e);
+      return null;
+    }
   }
 
   @override
@@ -185,10 +203,14 @@ class _TransactionsListScreenState extends State<TransactionsListScreen>
       return _buildEmptyState('No transactions found');
     }
 
+    // Sort transactions from newest to oldest
+    final sortedTransactions = List<Transaction>.from(transactions)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
     return ListView.builder(
-      itemCount: transactions.length,
+      itemCount: sortedTransactions.length,
       itemBuilder: (context, index) {
-        final transaction = transactions[index];
+        final transaction = sortedTransactions[index];
         return _buildTransactionCard(transaction);
       },
     );

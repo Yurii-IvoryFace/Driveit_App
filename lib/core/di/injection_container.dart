@@ -16,6 +16,7 @@ import '../../domain/usecases/transaction_usecases.dart'
     as transaction_usecases;
 import '../../domain/usecases/attachment_usecases.dart' as attachment_usecases;
 import '../../domain/usecases/refueling_usecases.dart' as refueling_usecases;
+import '../../domain/usecases/validate_odometer.dart';
 
 final getIt = GetIt.instance;
 
@@ -61,6 +62,9 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<vehicle_usecases.GetPrimaryVehicle>(
     () => vehicle_usecases.GetPrimaryVehicle(getIt<VehicleRepository>()),
+  );
+  getIt.registerLazySingleton<vehicle_usecases.UpdateVehicleOdometer>(
+    () => vehicle_usecases.UpdateVehicleOdometer(getIt<VehicleRepository>()),
   );
   getIt.registerLazySingleton<vehicle_usecases.WatchVehiclesWithStats>(
     () => vehicle_usecases.WatchVehiclesWithStats(getIt<VehicleRepository>()),
@@ -186,6 +190,11 @@ Future<void> configureDependencies() async {
     () => transaction_usecases.GetTransactionsByOdometerRange(
       getIt<TransactionRepository>(),
     ),
+  );
+
+  // Odometer Validation Use Case
+  getIt.registerLazySingleton<ValidateOdometer>(
+    () => ValidateOdometer(getIt<TransactionRepository>()),
   );
 
   // Attachment Use Cases

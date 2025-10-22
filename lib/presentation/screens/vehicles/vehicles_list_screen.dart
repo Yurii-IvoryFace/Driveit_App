@@ -230,6 +230,7 @@ class _VehiclesListScreenState extends State<VehiclesListScreen>
               );
             },
             onDelete: () => _showDeleteDialog(vehicle),
+            onSetPrimary: () => _setPrimaryVehicle(vehicle),
           );
         },
       );
@@ -262,10 +263,21 @@ class _VehiclesListScreenState extends State<VehiclesListScreen>
               );
             },
             onDelete: () => _showDeleteDialog(vehicle),
+            onSetPrimary: () => _setPrimaryVehicle(vehicle),
           );
         },
       );
     }
+  }
+
+  void _setPrimaryVehicle(Vehicle vehicle) {
+    context.read<VehicleBloc>().add(SetPrimaryVehicleEvent(vehicle.id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${vehicle.name} is now your primary vehicle'),
+        backgroundColor: AppColors.primary,
+      ),
+    );
   }
 
   void _showDeleteDialog(Vehicle vehicle) {

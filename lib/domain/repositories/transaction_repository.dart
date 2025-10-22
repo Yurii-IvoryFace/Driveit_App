@@ -22,7 +22,10 @@ abstract class TransactionRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
-  Future<List<Transaction>> getRecentTransactions(int limit);
+  Future<List<Transaction>> getRecentTransactions(
+    int limit, {
+    String? vehicleId,
+  });
   Future<List<Transaction>> getTransactionsByOdometerRange({
     required String vehicleId,
     required int minOdometer,

@@ -6,6 +6,8 @@ import '../../bloc/reports/reports_bloc.dart';
 import '../../bloc/reports/reports_event.dart';
 import '../../bloc/vehicle/vehicle_bloc.dart';
 import '../../bloc/vehicle/vehicle_state.dart';
+import '../../../domain/usecases/vehicle_usecases.dart' as vehicle_usecases;
+import '../../../core/di/injection_container.dart';
 import 'tabs/overview_tab.dart';
 import 'tabs/fuel_tab.dart';
 import 'tabs/costs_tab.dart';
@@ -31,7 +33,7 @@ class _ReportsScreenState extends State<ReportsScreen>
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     _initializeDateRange();
-    _loadInitialData();
+    _loadPrimaryVehicleAndData();
   }
 
   @override
@@ -44,6 +46,26 @@ class _ReportsScreenState extends State<ReportsScreen>
     final now = DateTime.now();
     _endDate = now;
     _startDate = DateTime(now.year, now.month - 2, now.day); // Last 3 months
+  }
+
+  Future<void> _loadPrimaryVehicleAndData() async {
+    try {
+      // Get primary vehicle
+      final getPrimaryVehicle = getIt<vehicle_usecases.GetPrimaryVehicle>();
+      final primaryVehicle = await getPrimaryVehicle();
+
+      if (primaryVehicle != null) {
+        setState(() {
+          _selectedVehicleId = primaryVehicle.id;
+        });
+      }
+
+      // Load initial data
+      _loadInitialData();
+    } catch (e) {
+      // If error getting primary vehicle, still load data without vehicle filter
+      _loadInitialData();
+    }
   }
 
   void _loadInitialData() {
@@ -264,9 +286,17 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   void _applyFilters() {
-    context.read<ReportsBloc>().add(ChangeSelectedVehicle(_selectedVehicleId));
+    setState(() {
+      // Update the selected vehicle and date range
+    });
+
+    // Reload all data with new filters
     context.read<ReportsBloc>().add(
-      ChangeDateRange(startDate: _startDate!, endDate: _endDate!),
+      RefreshReportsData(
+        vehicleId: _selectedVehicleId,
+        startDate: _startDate,
+        endDate: _endDate,
+      ),
     );
   }
 

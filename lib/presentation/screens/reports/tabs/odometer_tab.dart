@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/chart_data_utils.dart';
+import '../../../../domain/entities/transaction.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/universal_line_chart_widget.dart';
+import '../../../widgets/charts/improved_line_chart_widget.dart';
 
 class OdometerTab extends StatefulWidget {
   final String? vehicleId;
@@ -31,6 +31,22 @@ class _OdometerTabState extends State<OdometerTab> {
         endDate: widget.endDate,
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(OdometerTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId ||
+        oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate) {
+      context.read<ReportsBloc>().add(
+        LoadOdometerData(
+          vehicleId: widget.vehicleId,
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        ),
+      );
+    }
   }
 
   @override
@@ -128,7 +144,7 @@ class _OdometerTabState extends State<OdometerTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Odometer Statistics',
+          'Статистика пробігу',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
@@ -140,7 +156,7 @@ class _OdometerTabState extends State<OdometerTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Total Distance',
+                'Загальна відстань',
                 ChartDataUtils.formatDistance(
                   statistics['totalDistance'] ?? 0.0,
                 ),
@@ -152,7 +168,7 @@ class _OdometerTabState extends State<OdometerTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg Distance',
+                'Середня відстань',
                 ChartDataUtils.formatDistance(
                   statistics['averageDistance'] ?? 0.0,
                 ),
@@ -168,7 +184,7 @@ class _OdometerTabState extends State<OdometerTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Refuelings',
+                'Заправки',
                 '${statistics['totalRefuelings'] ?? 0}',
                 Icons.local_gas_station,
                 AppColors.warning,
@@ -178,7 +194,7 @@ class _OdometerTabState extends State<OdometerTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg per Refueling',
+                'Середня на заправку',
                 ChartDataUtils.formatDistance(
                   (statistics['totalDistance'] ?? 0.0) /
                       (statistics['totalRefuelings'] ?? 1),
@@ -233,13 +249,13 @@ class _OdometerTabState extends State<OdometerTab> {
   }
 
   Widget _buildOdometerTrendChart(BuildContext context, entries) {
-    final spots = ChartDataUtils.getOdometerTrend(entries);
+    final transactions = entries.cast<Transaction>();
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Odometer Reading Trend',
-      yAxisLabel: 'Kilometers',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getOdometerTrendSpotsFromTransactions(transactions),
+      title: 'Зміна пробігу',
+      yAxisLabel: 'Кілометри',
+      xAxisLabel: 'Дата',
       lineColor: AppColors.primary,
     );
   }
@@ -269,18 +285,13 @@ class _OdometerTabState extends State<OdometerTab> {
     final sortedEntries = List.from(entries)
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    final spots = <FlSpot>[];
-    for (int i = 1; i < sortedEntries.length; i++) {
-      final distance =
-          sortedEntries[i].odometerKm - sortedEntries[i - 1].odometerKm;
-      spots.add(FlSpot(i.toDouble(), distance.toDouble()));
-    }
-
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Distance Between Refuelings',
-      yAxisLabel: 'Kilometers',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getDistanceSpotsFromTransactions(
+        sortedEntries.cast<Transaction>(),
+      ),
+      title: 'Відстань між заправками',
+      yAxisLabel: 'Кілометри',
+      xAxisLabel: 'Заправки',
       lineColor: AppColors.success,
     );
   }

@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../domain/usecases/transaction_usecases.dart'
     as transaction_usecases;
@@ -212,16 +211,18 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
   ) async {
     emit(ReportsLoading());
     try {
-      final odometerEntries = await _loadRefuelingEntries(
+      final transactions = await _loadTransactions(
         event.vehicleId,
         event.startDate,
         event.endDate,
       );
-      final odometerStatistics = _calculateOdometerStatistics(odometerEntries);
+      final odometerStatistics = _calculateOdometerStatisticsFromTransactions(
+        transactions,
+      );
 
       emit(
         OdometerDataLoaded(
-          odometerEntries: odometerEntries,
+          odometerEntries: transactions,
           odometerStatistics: odometerStatistics,
           vehicleId: event.vehicleId,
           startDate: event.startDate,
@@ -276,9 +277,42 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     RefreshReportsData event,
     Emitter<ReportsState> emit,
   ) async {
-    // Load all data
+    // Clear cache
+    _cachedCostsData = null;
+    _cachedFuelData = null;
+    _lastCacheTime = null;
+
+    // Load all data for all tabs
     add(
       LoadOverviewData(
+        vehicleId: event.vehicleId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+    add(
+      LoadFuelData(
+        vehicleId: event.vehicleId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+    add(
+      LoadCostsData(
+        vehicleId: event.vehicleId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+    add(
+      LoadOdometerData(
+        vehicleId: event.vehicleId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
+    add(
+      LoadOwnershipData(
         vehicleId: event.vehicleId,
         startDate: event.startDate,
         endDate: event.endDate,
@@ -325,10 +359,19 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     DateTime? startDate,
     DateTime? endDate,
   ) async {
-    if (vehicleId != null && startDate != null && endDate != null) {
+    if (vehicleId != null) {
+      // Filter by vehicle, optionally with date range
+      final transactions = await _getTransactionsByVehicle(vehicleId);
+      if (startDate != null && endDate != null) {
+        return transactions
+            .where(
+              (t) => !t.date.isBefore(startDate) && !t.date.isAfter(endDate),
+            )
+            .toList();
+      }
+      return transactions;
+    } else if (startDate != null && endDate != null) {
       return await _getTransactionsByDateRange(startDate, endDate);
-    } else if (vehicleId != null) {
-      return await _getTransactionsByVehicle(vehicleId);
     } else {
       return await _getTransactions();
     }
@@ -339,14 +382,23 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
     DateTime? startDate,
     DateTime? endDate,
   ) async {
-    if (vehicleId != null && startDate != null && endDate != null) {
+    if (vehicleId != null) {
+      // Filter by vehicle, optionally with date range
+      final refuelingEntries = await _getRefuelingEntriesByVehicle(vehicleId);
+      if (startDate != null && endDate != null) {
+        return refuelingEntries
+            .where(
+              (r) => !r.date.isBefore(startDate) && !r.date.isAfter(endDate),
+            )
+            .toList();
+      }
+      return refuelingEntries;
+    } else if (startDate != null && endDate != null) {
       return await _getRefuelingEntriesByDateRange(
-        vehicleId: vehicleId,
+        vehicleId: '',
         startDate: startDate,
         endDate: endDate,
       );
-    } else if (vehicleId != null) {
-      return await _getRefuelingEntriesByVehicle(vehicleId);
     } else {
       return await _getRefuelingEntries();
     }
@@ -372,35 +424,46 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       'totalRefuelings': totalRefuelings,
       'totalVolume': totalVolume,
       'averageEfficiency': averageEfficiency,
-      'costTrend': ChartDataUtils.getCostTrendSpots(transactions),
-      'fuelConsumption': ChartDataUtils.getFuelConsumptionSpots(
-        refuelingEntries,
-      ),
+      'transactions': transactions,
+      'refuelingEntries': refuelingEntries,
     };
   }
 
-  Map<String, dynamic> _calculateOdometerStatistics(
-    List<RefuelingEntry> entries,
+  Map<String, dynamic> _calculateOdometerStatisticsFromTransactions(
+    List<Transaction> transactions,
   ) {
-    if (entries.isEmpty) {
+    // Filter transactions that have odometer readings
+    final odometerTransactions = transactions
+        .where((t) => t.odometerKm != null)
+        .toList();
+
+    if (odometerTransactions.isEmpty) {
       return {
         'totalDistance': 0.0,
         'averageDistance': 0.0,
-        'odometerTrend': <FlSpot>[],
+        'totalRefuelings': 0,
+        'entries': [],
       };
     }
 
-    final sortedEntries = List<RefuelingEntry>.from(entries)
+    final sortedTransactions = List<Transaction>.from(odometerTransactions)
       ..sort((a, b) => a.date.compareTo(b.date));
 
     final totalDistance =
-        sortedEntries.last.odometerKm - sortedEntries.first.odometerKm;
-    final averageDistance = totalDistance / sortedEntries.length;
+        sortedTransactions.last.odometerKm! -
+        sortedTransactions.first.odometerKm!;
+    final averageDistance = totalDistance / sortedTransactions.length;
+
+    // Count refueling transactions
+    final refuelingCount = odometerTransactions
+        .where((t) => t.type == TransactionType.refueling)
+        .length;
 
     return {
       'totalDistance': totalDistance.toDouble(),
-      'averageDistance': averageDistance,
-      'odometerTrend': ChartDataUtils.getOdometerTrend(entries),
+      'averageDistance': averageDistance.toDouble(),
+      'totalRefuelings': refuelingCount,
+      'entries': sortedTransactions,
     };
   }
 
@@ -413,18 +476,32 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       0.0,
       (sum, r) => sum + r.totalAmount,
     );
-    final totalDistance = refuelingEntries.isNotEmpty
-        ? refuelingEntries.last.odometerKm - refuelingEntries.first.odometerKm
-        : 0;
+
+    // Calculate total distance from all transactions with odometer readings
+    final odometerTransactions = transactions
+        .where((t) => t.odometerKm != null)
+        .toList();
+
+    double totalDistance = 0.0;
+    if (odometerTransactions.isNotEmpty) {
+      final sortedTransactions = List<Transaction>.from(odometerTransactions)
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+      totalDistance =
+          (sortedTransactions.last.odometerKm! -
+                  sortedTransactions.first.odometerKm!)
+              .toDouble();
+    }
 
     return {
       'totalCost': totalCost,
       'totalRefuelingCost': totalRefuelingCost,
-      'totalDistance': totalDistance.toDouble(),
+      'totalDistance': totalDistance,
       'costPerKm': totalDistance > 0 ? totalCost / totalDistance : 0.0,
       'refuelingCostPerKm': totalDistance > 0
           ? totalRefuelingCost / totalDistance
           : 0.0,
+      'transactions': transactions,
     };
   }
 }

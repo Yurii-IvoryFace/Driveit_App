@@ -61,7 +61,7 @@ class CostsDataLoaded extends ReportsState {
 
 /// State when odometer data is loaded
 class OdometerDataLoaded extends ReportsState {
-  final List<RefuelingEntry> odometerEntries;
+  final List<Transaction> odometerEntries;
   final Map<String, dynamic> odometerStatistics;
   final String? vehicleId;
   final DateTime? startDate;

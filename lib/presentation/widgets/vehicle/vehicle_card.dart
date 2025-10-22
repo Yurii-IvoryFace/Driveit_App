@@ -7,6 +7,7 @@ class VehicleCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onSetPrimary;
   final bool isSelected;
 
   const VehicleCard({
@@ -15,6 +16,7 @@ class VehicleCard extends StatelessWidget {
     this.onTap,
     this.onEdit,
     this.onDelete,
+    this.onSetPrimary,
     this.isSelected = false,
   });
 
@@ -70,6 +72,9 @@ class VehicleCard extends StatelessWidget {
                         case 'delete':
                           onDelete?.call();
                           break;
+                        case 'setPrimary':
+                          onSetPrimary?.call();
+                          break;
                       }
                     },
                     itemBuilder: (context) => [
@@ -83,6 +88,20 @@ class VehicleCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (!vehicle.isPrimary)
+                        const PopupMenuItem(
+                          value: 'setPrimary',
+                          child: Row(
+                            children: [
+                              Icon(Icons.star, size: 20, color: Colors.orange),
+                              SizedBox(width: 8),
+                              Text(
+                                'Set as Primary',
+                                style: TextStyle(color: Colors.orange),
+                              ),
+                            ],
+                          ),
+                        ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(

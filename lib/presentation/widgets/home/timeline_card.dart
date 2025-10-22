@@ -37,32 +37,21 @@ class TimelineCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (onViewAll != null)
-                  TextButton(
-                    onPressed: onViewAll,
-                    child: const Text('View All'),
-                  ),
               ],
             ),
           ),
           if (recentTransactions.isEmpty)
             _buildEmptyState(context)
           else
-            ...recentTransactions
-                .take(3)
-                .map((transaction) => _buildTimelineItem(context, transaction)),
-          if (recentTransactions.length > 3)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: TextButton(
-                  onPressed: onViewAll,
-                  child: Text(
-                    'View ${recentTransactions.length - 3} more',
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                ),
-              ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(), // Let parent scroll
+              itemCount: recentTransactions.length,
+              itemBuilder: (context, index) {
+                final transaction = recentTransactions[index];
+                return _buildTimelineItem(context, transaction);
+              },
             ),
         ],
       ),

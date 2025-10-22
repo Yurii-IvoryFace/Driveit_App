@@ -58,64 +58,213 @@ class ChartDataUtils {
     return spots;
   }
 
+  /// Convert refueling entries to line chart data for fuel volume
+  static List<FlSpot> getFuelVolumeSpots(List<RefuelingEntry> entries) {
+    if (entries.isEmpty) return [];
+
+    // Sort by date
+    final sortedEntries = List<RefuelingEntry>.from(entries)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < sortedEntries.length; i++) {
+      final entry = sortedEntries[i];
+      spots.add(FlSpot(i.toDouble(), entry.volumeLiters));
+    }
+
+    return spots;
+  }
+
+  /// Convert refueling entries to line chart data for fuel price
+  static List<FlSpot> getFuelPriceSpots(List<RefuelingEntry> entries) {
+    if (entries.isEmpty) return [];
+
+    // Sort by date
+    final sortedEntries = List<RefuelingEntry>.from(entries)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < sortedEntries.length; i++) {
+      final entry = sortedEntries[i];
+      spots.add(FlSpot(i.toDouble(), entry.pricePerLiter));
+    }
+
+    return spots;
+  }
+
+  /// Convert refueling entries to line chart data for odometer trend
+  static List<FlSpot> getOdometerTrendSpots(List<RefuelingEntry> entries) {
+    if (entries.isEmpty) return [];
+
+    // Sort by date
+    final sortedEntries = List<RefuelingEntry>.from(entries)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < sortedEntries.length; i++) {
+      final entry = sortedEntries[i];
+      spots.add(FlSpot(i.toDouble(), entry.odometerKm.toDouble()));
+    }
+
+    return spots;
+  }
+
+  /// Convert transactions to line chart data for odometer trend (all transactions with odometer)
+  static List<FlSpot> getOdometerTrendSpotsFromTransactions(
+    List<Transaction> transactions,
+  ) {
+    if (transactions.isEmpty) return [];
+
+    // Filter transactions that have odometer readings and sort by date
+    final odometerTransactions =
+        transactions.where((t) => t.odometerKm != null).toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 0; i < odometerTransactions.length; i++) {
+      final transaction = odometerTransactions[i];
+      spots.add(FlSpot(i.toDouble(), transaction.odometerKm!.toDouble()));
+    }
+
+    return spots;
+  }
+
+  /// Convert refueling entries to line chart data for distance between refuelings
+  static List<FlSpot> getDistanceSpots(List<RefuelingEntry> entries) {
+    if (entries.length < 2) return [];
+
+    // Sort by date
+    final sortedEntries = List<RefuelingEntry>.from(entries)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 1; i < sortedEntries.length; i++) {
+      final distance =
+          sortedEntries[i].odometerKm - sortedEntries[i - 1].odometerKm;
+      spots.add(FlSpot(i.toDouble(), distance.toDouble()));
+    }
+
+    return spots;
+  }
+
+  /// Convert transactions to line chart data for distance between transactions with odometer
+  static List<FlSpot> getDistanceSpotsFromTransactions(
+    List<Transaction> transactions,
+  ) {
+    // Filter transactions that have odometer readings
+    final odometerTransactions = transactions
+        .where((t) => t.odometerKm != null)
+        .toList();
+
+    if (odometerTransactions.length < 2) return [];
+
+    // Sort by date
+    final sortedTransactions = List<Transaction>.from(odometerTransactions)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final spots = <FlSpot>[];
+    for (int i = 1; i < sortedTransactions.length; i++) {
+      final distance =
+          sortedTransactions[i].odometerKm! -
+          sortedTransactions[i - 1].odometerKm!;
+      spots.add(FlSpot(i.toDouble(), distance.toDouble()));
+    }
+
+    return spots;
+  }
+
   /// Convert transactions to pie chart data by type
   static List<PieChartSectionData> getTransactionTypePieData(
     List<Transaction> transactions,
   ) {
     if (transactions.isEmpty) return [];
 
-    // Group by type and sum amounts
-    final Map<TransactionType, double> typeAmounts = {};
+    final Map<String, double> typeTotals = {};
     for (final transaction in transactions) {
-      if (transaction.amount != null) {
-        typeAmounts[transaction.type] =
-            (typeAmounts[transaction.type] ?? 0) +
-            transaction.amount!.toDouble();
-      }
+      final type = _getTransactionTypeName(transaction.type);
+      typeTotals[type] =
+          (typeTotals[type] ?? 0) + (transaction.amount?.toDouble() ?? 0.0);
     }
 
-    final total = typeAmounts.values.fold(0.0, (sum, amount) => sum + amount);
-    if (total == 0) return [];
-
+    final sections = <PieChartSectionData>[];
     final colors = [
       const Color(0xFF2196F3), // Blue
       const Color(0xFF4CAF50), // Green
       const Color(0xFFFF9800), // Orange
-      const Color(0xFF9C27B0), // Purple
       const Color(0xFFF44336), // Red
-      const Color(0xFF00BCD4), // Cyan
-      const Color(0xFF795548), // Brown
+      const Color(0xFF9C27B0), // Purple
     ];
 
-    final sections = <PieChartSectionData>[];
     int colorIndex = 0;
-
-    for (final entry in typeAmounts.entries) {
-      final percentage = (entry.value / total) * 100;
-      if (percentage > 0) {
-        sections.add(
-          PieChartSectionData(
-            color: colors[colorIndex % colors.length],
-            value: percentage,
-            title:
-                '${entry.key.displayName}\n${percentage.toStringAsFixed(1)}%',
-            radius: 70,
-            titleStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+    typeTotals.forEach((type, amount) {
+      sections.add(
+        PieChartSectionData(
+          color: colors[colorIndex % colors.length],
+          value: amount,
+          title: type,
+          radius: 60,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-        );
-        colorIndex++;
-      }
-    }
+        ),
+      );
+      colorIndex++;
+    });
 
     return sections;
   }
 
+  /// Format currency for display
+  static String formatCurrency(double amount) {
+    return '${amount.toStringAsFixed(0)}₴';
+  }
+
+  /// Format fuel consumption for display
+  static String formatFuelConsumption(double consumption) {
+    return '${consumption.toStringAsFixed(1)} л/100км';
+  }
+
+  /// Format distance for display
+  static String formatDistance(double distance) {
+    if (distance >= 1000) {
+      return '${(distance / 1000).toStringAsFixed(1)}К км';
+    } else {
+      return '${distance.toStringAsFixed(0)} км';
+    }
+  }
+
+  /// Calculate average fuel consumption from refueling entries
+  static double calculateAverageFuelConsumption(List<RefuelingEntry> entries) {
+    if (entries.length < 2) return 0.0;
+
+    // Sort by date
+    final sortedEntries = List<RefuelingEntry>.from(entries)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    double totalConsumption = 0.0;
+    int validCalculations = 0;
+
+    for (int i = 1; i < sortedEntries.length; i++) {
+      final current = sortedEntries[i];
+      final previous = sortedEntries[i - 1];
+
+      final distance = current.odometerKm - previous.odometerKm;
+      final fuel = current.volumeLiters;
+
+      if (distance > 0 && fuel > 0) {
+        final consumption = (fuel * 100) / distance; // L/100km
+        totalConsumption += consumption;
+        validCalculations++;
+      }
+    }
+
+    return validCalculations > 0 ? totalConsumption / validCalculations : 0.0;
+  }
+
   /// Convert transactions to bar chart data for monthly costs
-  static List<BarChartGroupData> getMonthlyCostBars(
+  static List<BarChartGroupData> getMonthlyCostsBarData(
     List<Transaction> transactions,
   ) {
     if (transactions.isEmpty) return [];
@@ -123,23 +272,37 @@ class ChartDataUtils {
     // Group by month
     final Map<String, double> monthlyCosts = {};
     for (final transaction in transactions) {
-      final monthKey = '${transaction.date.year}-${transaction.date.month}';
+      final monthKey =
+          '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
       monthlyCosts[monthKey] =
           (monthlyCosts[monthKey] ?? 0) +
           (transaction.amount?.toDouble() ?? 0.0);
     }
 
-    // Convert to BarChartGroupData
-    final bars = <BarChartGroupData>[];
-    int index = 0;
-    for (final entry in monthlyCosts.entries) {
-      bars.add(
+    // Sort by month
+    final sortedMonths = monthlyCosts.keys.toList()..sort();
+
+    // Convert to BarChartGroupData format
+    final barGroups = <BarChartGroupData>[];
+    final colors = [
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFF44336), // Red
+      const Color(0xFF9C27B0), // Purple
+    ];
+
+    for (int i = 0; i < sortedMonths.length; i++) {
+      final month = sortedMonths[i];
+      final cost = monthlyCosts[month]!;
+
+      barGroups.add(
         BarChartGroupData(
-          x: index,
+          x: i,
           barRods: [
             BarChartRodData(
-              toY: entry.value,
-              color: const Color(0xFF2196F3),
+              toY: cost,
+              color: colors[i % colors.length],
               width: 20,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
@@ -149,129 +312,84 @@ class ChartDataUtils {
           ],
         ),
       );
-      index++;
     }
 
-    return bars;
+    return barGroups;
   }
 
-  /// Get fuel efficiency trend data
-  static List<FlSpot> getFuelEfficiencyTrend(List<RefuelingEntry> entries) {
-    if (entries.length < 2) return [];
-
-    final sortedEntries = List<RefuelingEntry>.from(entries)
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    final spots = <FlSpot>[];
-    for (int i = 1; i < sortedEntries.length; i++) {
-      final current = sortedEntries[i];
-      final previous = sortedEntries[i - 1];
-
-      final distance = current.odometerKm - previous.odometerKm;
-      if (distance > 0 && current.volumeLiters > 0) {
-        final efficiency = (current.volumeLiters / distance) * 100; // L/100km
-        spots.add(FlSpot(i.toDouble(), efficiency));
-      }
-    }
-
-    return spots;
-  }
-
-  /// Get odometer reading trend
-  static List<FlSpot> getOdometerTrend(List<RefuelingEntry> entries) {
-    if (entries.isEmpty) return [];
-
-    final sortedEntries = List<RefuelingEntry>.from(entries)
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    final spots = <FlSpot>[];
-    for (int i = 0; i < sortedEntries.length; i++) {
-      spots.add(FlSpot(i.toDouble(), sortedEntries[i].odometerKm.toDouble()));
-    }
-
-    return spots;
-  }
-
-  /// Calculate average fuel consumption
-  static double calculateAverageFuelConsumption(List<RefuelingEntry> entries) {
-    if (entries.length < 2) return 0.0;
-
-    final sortedEntries = List<RefuelingEntry>.from(entries)
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    double totalConsumption = 0.0;
-    int validEntries = 0;
-
-    for (int i = 1; i < sortedEntries.length; i++) {
-      final current = sortedEntries[i];
-      final previous = sortedEntries[i - 1];
-
-      final distance = current.odometerKm - previous.odometerKm;
-      if (distance > 0 && current.volumeLiters > 0) {
-        final consumption = (current.volumeLiters / distance) * 100; // L/100km
-        totalConsumption += consumption;
-        validEntries++;
-      }
-    }
-
-    return validEntries > 0 ? totalConsumption / validEntries : 0.0;
-  }
-
-  /// Calculate total costs by category
-  static Map<TransactionType, double> getCostsByCategory(
+  /// Convert transactions to bar chart data for costs by category
+  static List<BarChartGroupData> getCostsByCategoryBarData(
     List<Transaction> transactions,
   ) {
-    final Map<TransactionType, double> costs = {};
+    if (transactions.isEmpty) return [];
 
+    // Group by category
+    final Map<String, double> categoryCosts = {};
     for (final transaction in transactions) {
-      if (transaction.amount != null) {
-        costs[transaction.type] =
-            (costs[transaction.type] ?? 0) + transaction.amount!.toDouble();
-      }
-    }
-
-    return costs;
-  }
-
-  /// Get monthly cost summary
-  static Map<String, double> getMonthlyCostSummary(
-    List<Transaction> transactions,
-  ) {
-    final Map<String, double> monthlyCosts = {};
-
-    for (final transaction in transactions) {
-      final monthKey =
-          '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
-      monthlyCosts[monthKey] =
-          (monthlyCosts[monthKey] ?? 0) +
+      final category = _getTransactionTypeName(transaction.type);
+      categoryCosts[category] =
+          (categoryCosts[category] ?? 0) +
           (transaction.amount?.toDouble() ?? 0.0);
     }
 
-    return monthlyCosts;
-  }
+    // Sort by cost (descending)
+    final sortedCategories = categoryCosts.keys.toList()
+      ..sort((a, b) => categoryCosts[b]!.compareTo(categoryCosts[a]!));
 
-  /// Format currency for display
-  static String formatCurrency(double amount, {String currency = '₴'}) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M $currency';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(1)}K $currency';
-    } else {
-      return '${amount.toStringAsFixed(0)} $currency';
+    // Convert to BarChartGroupData format
+    final barGroups = <BarChartGroupData>[];
+    final colors = [
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFF44336), // Red
+      const Color(0xFF9C27B0), // Purple
+    ];
+
+    for (int i = 0; i < sortedCategories.length; i++) {
+      final category = sortedCategories[i];
+      final cost = categoryCosts[category]!;
+
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: cost,
+              color: colors[i % colors.length],
+              width: 20,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+          ],
+        ),
+      );
     }
+
+    return barGroups;
   }
 
-  /// Format fuel consumption for display
-  static String formatFuelConsumption(double consumption) {
-    return '${consumption.toStringAsFixed(1)} L/100km';
-  }
+  /// Get Ukrainian name for transaction type
+  static String _getTransactionTypeName(TransactionType? type) {
+    if (type == null) return 'Інше';
 
-  /// Format distance for display
-  static String formatDistance(double distance) {
-    if (distance >= 1000) {
-      return '${(distance / 1000).toStringAsFixed(1)}K km';
-    } else {
-      return '${distance.toStringAsFixed(0)} km';
+    switch (type) {
+      case TransactionType.refueling:
+        return 'Заправка';
+      case TransactionType.maintenance:
+        return 'Обслуговування';
+      case TransactionType.insurance:
+        return 'Страхування';
+      case TransactionType.parking:
+        return 'Парковка';
+      case TransactionType.toll:
+        return 'Плата за дорогу';
+      case TransactionType.carWash:
+        return 'Мийка';
+      case TransactionType.other:
+        return 'Інше';
     }
   }
 }

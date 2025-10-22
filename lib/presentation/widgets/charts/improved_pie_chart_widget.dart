@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import '../../../core/theme/app_colors.dart';
 
-class UniversalPieChartWidget extends StatelessWidget {
+class ImprovedPieChartWidget extends StatelessWidget {
   final List<PieChartSectionData> sections;
   final String title;
   final double? totalValue;
@@ -12,19 +11,54 @@ class UniversalPieChartWidget extends StatelessWidget {
   final double? centerSpaceRadius;
   final double? sectionRadius;
 
-  const UniversalPieChartWidget({
+  const ImprovedPieChartWidget({
     super.key,
     required this.sections,
     required this.title,
     this.totalValue,
     this.totalLabel,
-    this.height = 140,
-    this.centerSpaceRadius = 25,
-    this.sectionRadius = 55,
+    this.height = 200,
+    this.centerSpaceRadius = 40,
+    this.sectionRadius = 60,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (sections.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: height,
+              child: Center(
+                child: Text(
+                  'No data available',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -53,17 +87,13 @@ class UniversalPieChartWidget extends StatelessWidget {
                     PieChartData(
                       sectionsSpace: 2,
                       centerSpaceRadius: centerSpaceRadius,
-                      sections: sections
-                          .map(
-                            (section) => PieChartSectionData(
-                              color: section.color,
-                              value: section.value,
-                              title: section.title,
-                              radius: sectionRadius,
-                              titleStyle: section.titleStyle,
-                            ),
-                          )
-                          .toList(),
+                      sections: sections,
+                      pieTouchData: PieTouchData(
+                        enabled: true,
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          // Handle touch events if needed
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -123,7 +153,7 @@ class UniversalPieChartWidget extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              section.title.split('\n').first,
+              section.title,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: AppColors.onSurface),

@@ -7,9 +7,9 @@ import '../../../../domain/entities/transaction.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/universal_line_chart_widget.dart';
-import '../../../widgets/charts/universal_bar_chart_widget.dart';
-import '../../../widgets/charts/universal_pie_chart_widget.dart';
+import '../../../widgets/charts/improved_line_chart_widget.dart';
+import '../../../widgets/charts/improved_bar_chart_widget.dart';
+import '../../../widgets/charts/improved_pie_chart_widget.dart';
 
 class CostsTab extends StatefulWidget {
   final String? vehicleId;
@@ -33,6 +33,22 @@ class _CostsTabState extends State<CostsTab> {
         endDate: widget.endDate,
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(CostsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId ||
+        oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate) {
+      context.read<ReportsBloc>().add(
+        LoadCostsData(
+          vehicleId: widget.vehicleId,
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        ),
+      );
+    }
   }
 
   @override
@@ -132,7 +148,7 @@ class _CostsTabState extends State<CostsTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Cost Statistics',
+          'Статистика витрат',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
@@ -144,7 +160,7 @@ class _CostsTabState extends State<CostsTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Total Cost',
+                'Загальні витрати',
                 ChartDataUtils.formatCurrency(
                   (statistics['totalAmount'] ?? 0.0).toDouble(),
                 ),
@@ -156,7 +172,7 @@ class _CostsTabState extends State<CostsTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Transactions',
+                'Транзакції',
                 '${statistics['totalTransactions'] ?? 0}',
                 Icons.receipt_long,
                 AppColors.success,
@@ -170,7 +186,7 @@ class _CostsTabState extends State<CostsTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg Cost',
+                'Середня вартість',
                 ChartDataUtils.formatCurrency(
                   (statistics['averageAmount'] ?? 0.0).toDouble(),
                 ),
@@ -182,7 +198,7 @@ class _CostsTabState extends State<CostsTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'This Month',
+                'Цей місяць',
                 ChartDataUtils.formatCurrency(
                   (statistics['monthlyAmount'] ?? 0.0).toDouble(),
                 ),
@@ -240,13 +256,12 @@ class _CostsTabState extends State<CostsTab> {
     List<dynamic> transactions,
   ) {
     final transactionList = transactions.cast<Transaction>();
-    final spots = ChartDataUtils.getCostTrendSpots(transactionList);
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Cost Trend Over Time',
-      yAxisLabel: 'Cost (₴)',
-      xAxisLabel: 'Days',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getCostTrendSpots(transactionList),
+      title: 'Динаміка витрат',
+      yAxisLabel: 'Витрати (₴)',
+      xAxisLabel: 'Дні',
       lineColor: AppColors.primary,
     );
   }
@@ -256,13 +271,12 @@ class _CostsTabState extends State<CostsTab> {
     List<dynamic> transactions,
   ) {
     final transactionList = transactions.cast<Transaction>();
-    final bars = ChartDataUtils.getMonthlyCostBars(transactionList);
 
-    return UniversalBarChartWidget(
-      barGroups: bars,
-      title: 'Monthly Costs',
-      yAxisLabel: 'Cost (₴)',
-      xAxisLabel: 'Months',
+    return ImprovedBarChartWidget(
+      barGroups: ChartDataUtils.getMonthlyCostsBarData(transactionList),
+      title: 'Витрати по місяцях',
+      yAxisLabel: 'Витрати (₴)',
+      xAxisLabel: 'Місяці',
       barColor: AppColors.success,
     );
   }
@@ -272,17 +286,17 @@ class _CostsTabState extends State<CostsTab> {
     List<dynamic> transactions,
   ) {
     final transactionList = transactions.cast<Transaction>();
-    final sections = ChartDataUtils.getTransactionTypePieData(transactionList);
+
     final totalCost = transactionList.fold(
       0.0,
-      (sum, t) => sum + (t.amount?.toDouble() ?? 0.0),
+      (sum, transaction) => sum + (transaction.amount?.toDouble() ?? 0.0),
     );
 
-    return UniversalPieChartWidget(
-      sections: sections,
-      title: 'Costs by Category',
+    return ImprovedPieChartWidget(
+      sections: ChartDataUtils.getTransactionTypePieData(transactionList),
+      title: 'Витрати по категоріях',
       totalValue: totalCost,
-      totalLabel: 'Total Cost',
+      totalLabel: 'Загальні витрати',
     );
   }
 }

@@ -157,8 +157,8 @@ class GetRecentTransactions {
 
   GetRecentTransactions(this._repository);
 
-  Future<List<Transaction>> call({int limit = 10}) async {
-    return await _repository.getRecentTransactions(limit);
+  Future<List<Transaction>> call({int limit = 10, String? vehicleId}) async {
+    return await _repository.getRecentTransactions(limit, vehicleId: vehicleId);
   }
 }
 

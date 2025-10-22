@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/chart_data_utils.dart';
+import '../../../../domain/entities/transaction.dart';
+import '../../../../domain/entities/refueling_entry.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/universal_line_chart_widget.dart';
+import '../../../widgets/charts/improved_line_chart_widget.dart';
 
 class OverviewTab extends StatefulWidget {
   final String? vehicleId;
@@ -31,6 +32,22 @@ class _OverviewTabState extends State<OverviewTab> {
         endDate: widget.endDate,
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(OverviewTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId ||
+        oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate) {
+      context.read<ReportsBloc>().add(
+        LoadOverviewData(
+          vehicleId: widget.vehicleId,
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        ),
+      );
+    }
   }
 
   @override
@@ -124,7 +141,7 @@ class _OverviewTabState extends State<OverviewTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Overview Statistics',
+          'Загальна статистика',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
@@ -136,7 +153,7 @@ class _OverviewTabState extends State<OverviewTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Total Cost',
+                'Загальні витрати',
                 ChartDataUtils.formatCurrency(data['totalCost'] ?? 0.0),
                 Icons.attach_money,
                 AppColors.primary,
@@ -146,7 +163,7 @@ class _OverviewTabState extends State<OverviewTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Transactions',
+                'Транзакції',
                 '${data['totalTransactions'] ?? 0}',
                 Icons.receipt_long,
                 AppColors.success,
@@ -160,7 +177,7 @@ class _OverviewTabState extends State<OverviewTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Refuelings',
+                'Заправки',
                 '${data['totalRefuelings'] ?? 0}',
                 Icons.local_gas_station,
                 AppColors.warning,
@@ -170,7 +187,7 @@ class _OverviewTabState extends State<OverviewTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg Efficiency',
+                'Середня ефективність',
                 ChartDataUtils.formatFuelConsumption(
                   data['averageEfficiency'] ?? 0.0,
                 ),
@@ -224,13 +241,13 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Widget _buildCostTrendChart(BuildContext context, Map<String, dynamic> data) {
-    final spots = data['costTrend'] as List<FlSpot>? ?? [];
+    final transactions = data['transactions'] as List<dynamic>? ?? [];
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Cost Trend',
-      yAxisLabel: 'Cost (₴)',
-      xAxisLabel: 'Days',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getCostTrendSpots(transactions.cast<Transaction>()),
+      title: 'Динаміка витрат',
+      yAxisLabel: 'Витрати (₴)',
+      xAxisLabel: 'Дні',
       lineColor: AppColors.primary,
     );
   }
@@ -239,13 +256,15 @@ class _OverviewTabState extends State<OverviewTab> {
     BuildContext context,
     Map<String, dynamic> data,
   ) {
-    final spots = data['fuelConsumption'] as List<FlSpot>? ?? [];
+    final refuelingEntries = data['refuelingEntries'] as List<dynamic>? ?? [];
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Fuel Consumption Trend',
-      yAxisLabel: 'L/100km',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getFuelConsumptionSpots(
+        refuelingEntries.cast<RefuelingEntry>(),
+      ),
+      title: 'Витрата палива',
+      yAxisLabel: 'л/100км',
+      xAxisLabel: 'Заправки',
       lineColor: AppColors.warning,
     );
   }

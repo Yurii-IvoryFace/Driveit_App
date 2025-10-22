@@ -1,6 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/usecases/transaction_usecases.dart';
+import '../../../domain/usecases/vehicle_usecases.dart' as vehicle_usecases;
+import '../../../domain/entities/transaction.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/di/injection_container.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
 
@@ -204,6 +207,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     emit(TransactionOperationInProgress(operation: 'Adding transaction'));
     try {
       await _addTransaction(event.transaction);
+
+      // Sync vehicle odometer if transaction has odometer reading
+      await _syncVehicleOdometer(event.transaction);
+
       emit(
         TransactionOperationSuccess(
           operation: 'Add',
@@ -228,6 +235,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     );
     try {
       await _updateTransaction(event.transaction);
+
+      // Sync vehicle odometer if transaction has odometer reading
+      await _syncVehicleOdometer(event.transaction);
+
       emit(
         TransactionOperationSuccess(
           operation: 'Update',
@@ -347,5 +358,29 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     add(LoadTransactions());
+  }
+
+  Future<void> _syncVehicleOdometer(Transaction transaction) async {
+    if (transaction.odometerKm != null) {
+      try {
+        // Get all transactions for this vehicle to find max odometer
+        final vehicleTransactions = await _getTransactionsByVehicle(
+          transaction.vehicleId,
+        );
+        final maxOdometer = vehicleTransactions
+            .where((t) => t.odometerKm != null)
+            .map((t) => t.odometerKm!)
+            .fold<int>(0, (max, km) => km > max ? km : max);
+
+        if (maxOdometer > 0) {
+          final updateVehicleOdometer =
+              getIt<vehicle_usecases.UpdateVehicleOdometer>();
+          await updateVehicleOdometer(transaction.vehicleId, maxOdometer);
+        }
+      } catch (e) {
+        // Log error but don't fail the transaction operation
+        Logger.log('Failed to sync vehicle odometer', error: e);
+      }
+    }
   }
 }

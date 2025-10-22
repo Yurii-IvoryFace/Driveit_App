@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/chart_data_utils.dart';
@@ -8,7 +7,7 @@ import '../../../../domain/entities/refueling_entry.dart';
 import '../../../bloc/reports/reports_bloc.dart';
 import '../../../bloc/reports/reports_event.dart';
 import '../../../bloc/reports/reports_state.dart';
-import '../../../widgets/charts/universal_line_chart_widget.dart';
+import '../../../widgets/charts/improved_line_chart_widget.dart';
 
 class FuelTab extends StatefulWidget {
   final String? vehicleId;
@@ -32,6 +31,22 @@ class _FuelTabState extends State<FuelTab> {
         endDate: widget.endDate,
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(FuelTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.vehicleId != widget.vehicleId ||
+        oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate) {
+      context.read<ReportsBloc>().add(
+        LoadFuelData(
+          vehicleId: widget.vehicleId,
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        ),
+      );
+    }
   }
 
   @override
@@ -131,7 +146,7 @@ class _FuelTabState extends State<FuelTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Fuel Statistics',
+          'Статистика палива',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
@@ -143,8 +158,8 @@ class _FuelTabState extends State<FuelTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Total Volume',
-                '${(statistics['totalVolume'] ?? 0.0).toDouble().toStringAsFixed(1)} L',
+                'Загальний об\'єм',
+                '${(statistics['totalVolume'] ?? 0.0).toDouble().toStringAsFixed(1)} л',
                 Icons.local_gas_station,
                 AppColors.primary,
               ),
@@ -153,7 +168,7 @@ class _FuelTabState extends State<FuelTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Total Cost',
+                'Загальна вартість',
                 ChartDataUtils.formatCurrency(
                   (statistics['totalAmount'] ?? 0.0).toDouble(),
                 ),
@@ -169,8 +184,8 @@ class _FuelTabState extends State<FuelTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg Price',
-                '${(statistics['averagePricePerLiter'] ?? 0.0).toDouble().toStringAsFixed(2)} ₴/L',
+                'Середня ціна',
+                '${(statistics['averagePricePerLiter'] ?? 0.0).toDouble().toStringAsFixed(2)} ₴/л',
                 Icons.trending_up,
                 AppColors.warning,
               ),
@@ -179,7 +194,7 @@ class _FuelTabState extends State<FuelTab> {
             Expanded(
               child: _buildStatCard(
                 context,
-                'Avg Efficiency',
+                'Середня ефективність',
                 ChartDataUtils.formatFuelConsumption(
                   (statistics['averageEfficiency'] ?? 0.0).toDouble(),
                 ),
@@ -237,47 +252,36 @@ class _FuelTabState extends State<FuelTab> {
     List<dynamic> entries,
   ) {
     final refuelingEntries = entries.cast<RefuelingEntry>();
-    final spots = ChartDataUtils.getFuelConsumptionSpots(refuelingEntries);
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Fuel Consumption Trend',
-      yAxisLabel: 'L/100km',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getFuelConsumptionSpots(refuelingEntries),
+      title: 'Динаміка витрати палива',
+      yAxisLabel: 'л/100км',
+      xAxisLabel: 'Заправки',
       lineColor: AppColors.warning,
     );
   }
 
   Widget _buildFuelVolumeChart(BuildContext context, List<dynamic> entries) {
     final refuelingEntries = entries.cast<RefuelingEntry>();
-    // Sort by date to ensure chronological order
-    refuelingEntries.sort((a, b) => a.date.compareTo(b.date));
-    final spots = refuelingEntries.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), e.value.volumeLiters);
-    }).toList();
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Fuel Volume per Refueling',
-      yAxisLabel: 'Liters',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getFuelVolumeSpots(refuelingEntries),
+      title: 'Об\'єм заправки',
+      yAxisLabel: 'Літри',
+      xAxisLabel: 'Заправки',
       lineColor: AppColors.primary,
     );
   }
 
   Widget _buildFuelPriceChart(BuildContext context, List<dynamic> entries) {
     final refuelingEntries = entries.cast<RefuelingEntry>();
-    // Sort by date to ensure chronological order
-    refuelingEntries.sort((a, b) => a.date.compareTo(b.date));
-    final spots = refuelingEntries.asMap().entries.map((e) {
-      return FlSpot(e.key.toDouble(), e.value.pricePerLiter);
-    }).toList();
 
-    return UniversalLineChartWidget(
-      spots: spots,
-      title: 'Fuel Price Trend',
-      yAxisLabel: '₴/L',
-      xAxisLabel: 'Refuelings',
+    return ImprovedLineChartWidget(
+      spots: ChartDataUtils.getFuelPriceSpots(refuelingEntries),
+      title: 'Ціна палива',
+      yAxisLabel: '₴/л',
+      xAxisLabel: 'Заправки',
       lineColor: AppColors.success,
     );
   }

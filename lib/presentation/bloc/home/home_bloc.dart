@@ -51,7 +51,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
 
       // Load all home data for primary vehicle
-      final recentTransactions = await _getRecentTransactions(limit: 5);
+      final recentTransactions = await _getRecentTransactions(
+        limit: 100, // Show all for infinite scroll
+        vehicleId: primaryVehicle.id,
+      );
       final vehicleStats = await _getTransactionStatistics(
         vehicleId: primaryVehicle.id,
       );
@@ -125,8 +128,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     try {
+      // Get primary vehicle for filtering
+      final primaryVehicle = await _getPrimaryVehicle();
       final recentTransactions = await _getRecentTransactions(
         limit: event.limit,
+        vehicleId: primaryVehicle?.id,
       );
 
       final currentState = state;
